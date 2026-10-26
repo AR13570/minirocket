@@ -1,0 +1,6 @@
+/data/
+/docs/
+/test
+/results/local/
+__pycache__/
+*.py[cod]
