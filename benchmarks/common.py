@@ -207,11 +207,6 @@ def _dataset_sources(args):
     return [found[name] for name in sorted(found)]
 
 
-def load_datasets(args):
-    """Load local splits; the runner uses the same sources one dataset at a time."""
-    return [_load_npz(train) if test is None else _load_pair(name, train, test)
-            for name, train, test in _dataset_sources(args)]
-
 
 def make_classifier(n_train, classifier, seed):
     from sklearn.linear_model import RidgeClassifierCV

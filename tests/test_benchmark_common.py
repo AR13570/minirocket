@@ -16,6 +16,11 @@ import common
 
 
 class LocalLoaderTests(unittest.TestCase):
+    def load(self, args):
+        return [common._load_npz(train) if test is None
+                else common._load_pair(name, train, test)
+                for name, train, test in common._dataset_sources(args)]
+
     def args(self, data, datasets=None):
         return argparse.Namespace(data=str(data), datasets=datasets)
 
@@ -25,7 +30,7 @@ class LocalLoaderTests(unittest.TestCase):
             X = np.arange(108).reshape(4, 3, 9)
             np.savez(path, X_train=X, y_train=['a', 'b', 'a', 'b'],
                      X_test=X[:2], y_test=['b', 'a'])
-            dataset, = common.load_datasets(self.args(path))
+            dataset, = self.load(self.args(path))
             self.assertEqual(dataset.X_train.shape, (4, 3, 9))
             self.assertEqual(dataset.X_train.dtype, np.float32)
             np.testing.assert_array_equal(dataset.y_test, ['b', 'a'])
@@ -37,7 +42,7 @@ class LocalLoaderTests(unittest.TestCase):
             folder.mkdir()
             np.savetxt(folder / 'Tiny_TRAIN.tsv', np.array([[1] + list(range(9)), [2] + list(range(9, 18))]), delimiter='\t')
             np.savetxt(folder / 'Tiny_TEST.tsv', np.array([[2] + list(range(18, 27))]), delimiter='\t')
-            dataset, = common.load_datasets(self.args(directory, ['Tiny']))
+            dataset, = self.load(self.args(directory, ['Tiny']))
             self.assertEqual(dataset.X_train.shape, (2, 1, 9))
             np.testing.assert_array_equal(dataset.X_test[0, 0], list(range(18, 27)))
             np.testing.assert_array_equal(dataset.y_train, ['1', '2'])
@@ -49,12 +54,12 @@ class LocalLoaderTests(unittest.TestCase):
                 np.savez(path, X_train=np.zeros((2, 9)), y_train=[0, 1],
                          X_test=test, y_test=[0, 1])
                 with self.assertRaises(ValueError):
-                    common.load_datasets(self.args(path))
+                    self.load(self.args(path))
 
     def test_no_local_pair_does_not_download(self):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(FileNotFoundError):
-                common.load_datasets(self.args(directory, ['Missing']))
+                self.load(self.args(directory, ['Missing']))
 
     def test_ts_reader_preserves_univariate_values(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -63,7 +68,7 @@ class LocalLoaderTests(unittest.TestCase):
             rows = '0,1,2,3,4,5,6,7,8:a\n1,2,3,4,5,6,7,8,9:b\n'
             for split in ['TRAIN', 'TEST']:
                 (base / f'Tiny_{split}.ts').write_text(header + rows)
-            dataset, = common.load_datasets(self.args(base, ['Tiny']))
+            dataset, = self.load(self.args(base, ['Tiny']))
             self.assertEqual(dataset.X_train.shape, (2, 1, 9))
             np.testing.assert_array_equal(dataset.X_train[0, 0], list(range(9)))
 
@@ -75,7 +80,7 @@ class LocalLoaderTests(unittest.TestCase):
             for split in ['TRAIN', 'TEST']:
                 (base / f'Tiny_{split}.ts').write_text(header + row + ':a\n' + row + ':b\n')
             with self.assertRaisesRegex(ValueError, 'timestamp'):
-                common.load_datasets(self.args(base, ['Tiny']))
+                self.load(self.args(base, ['Tiny']))
 
     def test_label_identity_and_nonfinite_values(self):
         np.testing.assert_array_equal(common._labels(np.array([9007199254740992, 9007199254740993], dtype=np.int64)),
@@ -92,7 +97,7 @@ class LocalLoaderTests(unittest.TestCase):
                 np.savez(folder / 'Tiny.npz', X_train=np.zeros((2,9)), y_train=[0,1],
                          X_test=np.zeros((2,9)), y_test=[0,1])
             with self.assertRaisesRegex(ValueError, 'Ambiguous'):
-                common.load_datasets(self.args(directory))
+                self.load(self.args(directory))
 
 
 class ArchiveCompatibilityTests(unittest.TestCase):
@@ -196,7 +201,7 @@ class BenchmarkUtilityTests(unittest.TestCase):
         np.testing.assert_array_equal(result, X[:, :2])
 
     def test_verbose_is_available_and_defaults_off(self):
-        from benchmark_joint_ppv import build_parser as focused_parser
+        from controller import build_parser as focused_parser
         parser = focused_parser()
         self.assertFalse(parser.parse_args(['--data', 'unused.npz']).verbose)
         self.assertTrue(parser.parse_args(['--data', 'unused.npz', '--verbose']).verbose)

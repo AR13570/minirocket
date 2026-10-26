@@ -22,6 +22,9 @@ except ImportError:
     from common import ROOT, _dataset_sources, _environment, _shorten, load_benchmark_dataset
 
 
+EXECUTION_ORDER_SEED = 20261026
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data',required=True,help='Local archive; never downloads')
@@ -33,10 +36,11 @@ def build_parser():
     parser.add_argument('--max-dilations-per-kernel',type=int,default=32)
     parser.add_argument('--classifier',choices=['ridge'],default='ridge')
     parser.add_argument('--verbose',action='store_true')
-    parser.set_defaults(output=Path('results/local/joint_ppv_full_archive.csv'))
-    parser.add_argument('--budgets', nargs='+', type=int, default=[2500,5000,10000])
+    parser.set_defaults(output=Path('results/local/joint_ppv_full_archive.csv'),
+                        order_seed=EXECUTION_ORDER_SEED)
+    parser.add_argument('--feature-counts', dest='budgets', nargs='+', type=int, default=[2500,5000,10000],
+                        metavar='COUNT', help='Requested feature counts, rounded down to multiples of 84')
     parser.add_argument('--transform-repetitions', type=int, default=3)
-    parser.add_argument('--order-seed', type=int, default=20261026)
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--inventory',type=Path,help='Frozen preflight compatibility/fingerprints')
     return parser
@@ -61,11 +65,9 @@ def case_order(dataset,seed,variants,order_seed):
 def source_hashes():
     files=['code/minirocket.py','code/minirocket_baseline.py',
            'code/minirocket_joint_ppv_simd.py','code/_joint_ppv_simd_kernels.py',
-           'benchmarks/common.py','benchmarks/pipeline_memory.py',
-           'benchmarks/benchmark_joint_ppv.py','benchmarks/joint_ppv_worker.py',
-           'benchmarks/analyze_results.py','benchmarks/inventory_joint_ppv.py',
-           'benchmarks/verify_joint_ppv.py','benchmarks/analyze_joint_ppv.py',
-           'benchmarks/joint_ppv_statistics.py','benchmarks/report_joint_ppv.py',
+           'benchmarks/common.py','benchmarks/memory.py',
+           'benchmarks/controller.py','benchmarks/worker.py',
+           'benchmarks/inventory.py',
            'tools/generate_joint_ppv.py']
     return {name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in files}
 
@@ -94,7 +96,7 @@ def execute_worker(job, directory, threads):
     path.write_text(json.dumps(job))
     env = worker_environment(threads)
     start = perf_counter()
-    module = 'benchmarks.joint_ppv_worker'
+    module = 'benchmarks.worker'
     completed = subprocess.run([sys.executable, '-B', '-m', module, '--job', str(path)],
                                cwd=ROOT, env=env, text=True, capture_output=True)
     wall = perf_counter() - start
@@ -235,7 +237,7 @@ def _run_pipeline_locked(args, variants=None):
     metadata.pop('error', None)
     save()
     try:
-        prewarm=subprocess.run([sys.executable,'-B','-m','benchmarks.joint_ppv_worker','--prewarm'],
+        prewarm=subprocess.run([sys.executable,'-B','-m','benchmarks.worker','--prewarm'],
                               cwd=ROOT,env=worker_environment(args.threads),text=True,capture_output=True)
         if prewarm.returncode:raise RuntimeError(f'JIT prewarm failed: {prewarm.stderr}')
         metadata['jit_cache_policy']=json.loads(prewarm.stdout)

@@ -2,5 +2,6 @@
 /docs/
 /test
 /results/local/
+/results/.*.lock
 __pycache__/
 *.py[cod]

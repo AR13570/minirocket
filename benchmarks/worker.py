@@ -10,7 +10,7 @@ from time import perf_counter
 import numpy as np
 
 from .common import ModelSpec, _load_npz, make_classifier, parameter_nbytes, transform_batches, verify_feature_values
-from .pipeline_memory import snapshot
+from .memory import snapshot
 
 
 def array_hash(*arrays):
