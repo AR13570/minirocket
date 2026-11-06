@@ -1,0 +1,40 @@
+ACSF1 seed=0 original done
+ACSF1 seed=1 original done
+ACSF1 seed=2 original done
+Adiac seed=0 original done
+Adiac seed=1 original done
+Adiac seed=2 original done
+
+Skipping AllGestureWiimoteX
+  Variable-length series require explicit preprocessing
+
+Skipping AllGestureWiimoteY
+  Variable-length series require explicit preprocessing
+
+Skipping AllGestureWiimoteZ
+  Variable-length series require explicit preprocessing
+ArrowHead seed=0 original done
+ArrowHead seed=1 original done
+ArrowHead seed=2 original done
+BME seed=0 original done
+BME seed=1 original done
+BME seed=2 original done
+Beef seed=0 original done
+Beef seed=1 original done
+Beef seed=2 original done
+BeetleFly seed=0 original done
+BeetleFly seed=1 original done
+BeetleFly seed=2 original done
+BirdChicken seed=0 original done
+BirdChicken seed=1 original done
+BirdChicken seed=2 original done
+CBF seed=0 original done
+CBF seed=1 original done
+CBF seed=2 original done
+Car seed=0 original done
+Car seed=1 original done
+Car seed=2 original done
+Chinatown seed=0 original done
+Chinatown seed=1 original done
+Chinatown seed=2 original done
+ChlorineConcentration seed=0 original done
