@@ -16,3 +16,11 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 
 ## Phase 3-11
 - Not started: need data (Phase 3 onward), reference CSVs from git history (Phase 4; commit 0b1c245 unavailable, zip of repo does not contain them).
+
+## Update (git, data, reference, Phase 3-5)
+- `git init`; commits 8aa4ae2 (baseline), 1dabf25 (new files + reference CSVs); branch group-pruning.
+- Data downloaded and extracted to data/Univariate_ts/ (not committed).
+- Phase 4: `python -B -m experiments.compare_to_paper` -> 109 datasets, 85.67% vs 85.69%, Wilcoxon p=0.582.
+- Phase 3: `python -B -m experiments.sanity_keepall` -> identical output, ratios 1.007 (GunPoint), 1.030 (Wafer).
+- Phase 5: pilot run (command in README_CHANGES.md section 4); 300 rows, 0 mismatches; summarise OK. Selection time 0.1-2.3 s per case; full-run estimate far below 48 h.
+- Stopped before Phase 6 as requested.
