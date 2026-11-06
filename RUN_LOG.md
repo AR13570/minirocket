@@ -82,3 +82,37 @@ Wilcoxon signed-rank on paired differences: p = 0.582
 Largest differences: BeetleFly +3.3pp, Computers +2.5pp, DistalPhalanxTW +1.7pp, SemgHandSubjectCh2 -1.6pp, EOGVerticalSignal +1.5pp
 ```
 - Matches the expected numbers. "Ours" is the committed `results/joint_ppv_2026-10-26/per_dataset.csv` (published arm64 run), not a rerun on this machine.
+
+## Phase 5: Pilot run — PASS
+
+**Deviation (timing hygiene):** the runbook sets only `NUMBA_NUM_THREADS=1`, but OpenBLAS defaulted to 4 threads here, so the classifier fits and ridge selection were multi-threaded in the first pilot. The repo's own `benchmarks/controller.py` pins `OPENBLAS_NUM_THREADS`/`OMP_NUM_THREADS` to the run's thread count, so the pilot was **rerun with all of them set to 1**, and every later timed run uses:
+```
+export PYTHONPATH="$PWD/code" NUMBA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+```
+The first pilot (4 BLAS threads) is kept, uncommitted, in `results/local/group_pruning_pilot_blas4threads/`. Its accuracies and mismatch count (0) are identical to the rerun; only times differ. `-W ignore::UserWarning` was added to silence sklearn's "Features ... are constant" warnings from `f_classif`; it has no effect on results.
+
+```
+.venv/bin/python -B -W ignore::UserWarning -m experiments.group_pruning --data ./data/Univariate_ts/ \
+  --output-dir ./results/group_pruning_pilot/ --datasets GunPoint ECG200 Beef Computers Wafer --seeds 0 1 \
+  --keep-fractions 1.0 0.5 0.2 --scorers ridge filter          # wall time 5 min 20 s
+.venv/bin/python -B -m experiments.summarise ./results/group_pruning_pilot/
+```
+- `report.md`: 300 rows, **0** pruned-feature mismatches (`equal_to_full_columns` true on every row).
+- keep 1.0 rows: joint and original accuracy identical on every (dataset, seed, strategy).
+- Independent check of the keep-all model: on GunPoint and Computers (seed 0) a separate `fit_univariate` + `transform_univariate` + `make_classifier` pipeline gives the same accuracy as the pilot's keep-all row (Computers 0.744).
+- **Cross-platform finding:** for the original strategy, keep-all accuracy equals the published joint-PPV run (arm64) on GunPoint, ECG200 and Beef but differs on Computers (seed 0: 0.744 here vs 0.732 published; seed 1: 0.708 vs 0.684) and Wafer (±0.0002). The split hash and `fit_input_sha256` match the published run exactly, but the hash of the fitted `fit_univariate` parameters does not (GunPoint seed 0), so the unmodified original fit yields slightly different biases on this x86 machine (floating-point/fastmath differences). This is a property of the original code across platforms, not of the new code. Accuracy comparisons in this log are therefore within this machine only.
+- Pilot headline (original strategy, mean over 5 datasets, 2 seeds): full 90.00%; ridge 50% groups 89.10% (−0.91 pp), ridge 20% 88.59% (−1.42 pp); filter 50% 89.33% (−0.68 pp), filter 20% 88.38% (−1.62 pp). Joint-PPV TEST transform at 20% groups (ridge) = 0.158 of full original.
+- `selection_seconds` (ridge / filter, mean over runs, single-threaded): Beef, Computers, ECG200, GunPoint ≤ 0.4 s / ≤ 0.03 s; Wafer ~1.9 s / 0.2 s.
+
+**Runtime extrapolation** (scratch script, not committed: scales the published run's per-dataset transform and classifier times by machine factors measured on the 5 pilot datasets: transform ×0.79–1.10, classifier ×4.03; ridge selection cost modelled as the sum of surviving widths over elimination rounds, which matched the pilot within ~2×):
+- Phase 6 (113 datasets × 3 seeds × 11 configurations, drop 0.2): **≈ 25 h** (drop 0.3: ≈ 20 h). ElectricDevices (≈ 14 h) and Crop (≈ 7 h) dominate; all other datasets ≈ 4.4 h. Under 48 h, so `--drop-fraction 0.2` is kept as in the runbook. The classifier factor comes from small datasets, so the estimate for the two largest datasets is uncertain.
+- Phase 7 (20 seeds × 3 strategies, keep 1.0): ≈ 27 h. Phase 8 (5 seeds × 2 strategies, ridge only): ≈ 66 h (≈ 11 h without Crop and ElectricDevices).
+
+## Phase 6: Full pruning run — STARTED
+
+Started 2026-11-06 22:03 UTC (pid 1375):
+```
+nohup .venv/bin/python -B -W ignore::UserWarning -m experiments.group_pruning \
+  --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_full/ \
+  --bias-strategies original --scorers ridge filter > results/group_pruning_full.log 2>&1 &
+```
