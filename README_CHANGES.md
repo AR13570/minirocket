@@ -28,7 +28,7 @@ The six code/test/experiment files were copied verbatim from the supplied docume
 - Commit `0b1c245` does not exist here, so the reference CSVs were downloaded from the authors' GitHub repo instead of `git show`.
 - Data: `data/UCR-univariate.zip` (258 MB) downloaded from timeseriesclassification.com and extracted to `data/Univariate_ts/` (128 entries; not committed).
 - No venv; the already-installed packages were used: Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 1.8.0, scipy 1.17.1, aeon 1.5.0. `codecarbon` is not installed (matters only for the optional energy phase).
-- Windows 11: `benchmarks/run.py` imports `fcntl` (POSIX only). That breaks 3 existing tests (1 failure, 2 errors of 56). Not fixed, because it needs a protected file. The new runner does not use it.
+- Windows 11: the existing test suite initially had 1 failure and 2 errors (of 56). Fixed WITHOUT touching protected files, see section 7.
 
 ## 4. Results so far
 **Phase 1/2.** Kernels current; 13/13 new tests pass under real Numba (no fixes needed).
@@ -49,3 +49,21 @@ Keep-all accuracy equals the full model by construction (the keep-1.0 rows are t
 
 ## 6. Not done yet (paused here at the user's request)
 Phase 6 full run, Phase 7 stratified-bias study (+ `experiments/analyse_bias.py`), Phase 8 combined run, Phase 9 energy, Phase 10 25k features, Phase 11 final assembly (fill `README_GROUP_PRUNING.md` tables, `results/README_RESULTS.md`).
+
+## 7. Windows compatibility shims (`compat_windows/`)
+**Why existing tests failed on Windows.** The repo was written for macOS/Linux. Four POSIX-only things were used:
+1. `import fcntl` (file locking) in `benchmarks/controller.py`, `benchmarks/run.py`, `tests/test_controller.py`. Module does not exist on Windows, so these modules failed to import.
+2. `os.sysconf('SC_PAGE_SIZE')` in `benchmarks/run.py::_hardware` (only `OSError`/`ValueError` are caught, but Windows raises `AttributeError`).
+3. `import resource` in `benchmarks/memory.py` (worker processes crashed at start, so the controller's JIT prewarm failed).
+4. (Not a failure here) memory.py's macOS-only physical-footprint counter is skipped on non-macOS by design.
+
+**Fix: stand-in modules found through PYTHONPATH; no protected file edited.**
+| File | Provides |
+|---|---|
+| `compat_windows/fcntl.py` | `flock`, `LOCK_EX/LOCK_NB/LOCK_UN` via `msvcrt.locking`; contention raises `BlockingIOError` as the code expects |
+| `compat_windows/sitecustomize.py` | `os.sysconf` for `SC_PAGE_SIZE`/`SC_PHYS_PAGES` (auto-loaded at interpreter start, including subprocesses) |
+| `compat_windows/resource.py` | `getrusage(RUSAGE_SELF).ru_maxrss` from the Windows peak working set |
+
+**Use (Windows only):** `export PYTHONPATH="$PWD/code:$PWD/compat_windows"` (Git Bash) before running tests or `benchmarks.run`.
+**Result:** `python -B -m unittest discover -s tests` -> 64 tests, **OK (1 skipped)**. The skip is `test_small_width_helpers_vectorize_on_audited_runtime`, which is specific to the audited ARM64 runtime.
+**Caveats:** (a) on Windows, benchmark memory = peak working set, not the macOS physical footprint used in the published results, so do not compare memory with them (C9). (b) Locking uses byte 0 of the lock file; fine for the repo's non-blocking exclusive use. (c) Do not use the shims on Linux/macOS; they are not needed. (d) `experiments/group_pruning.py` does not need them.

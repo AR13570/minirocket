@@ -24,3 +24,7 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 - Phase 3: `python -B -m experiments.sanity_keepall` -> identical output, ratios 1.007 (GunPoint), 1.030 (Wafer).
 - Phase 5: pilot run (command in README_CHANGES.md section 4); 300 rows, 0 mismatches; summarise OK. Selection time 0.1-2.3 s per case; full-run estimate far below 48 h.
 - Stopped before Phase 6 as requested.
+
+## Update (Windows test fix)
+- Cause of failing existing tests: POSIX-only fcntl, os.sysconf, resource. Added compat_windows/{fcntl,sitecustomize,resource}.py (no protected file changed).
+- `PYTHONPATH="$PWD/code:$PWD/compat_windows" python -B -m unittest discover -s tests` -> Ran 64 tests, OK (skipped=1, ARM64-only check).
