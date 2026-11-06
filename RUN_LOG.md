@@ -116,3 +116,8 @@ nohup .venv/bin/python -B -W ignore::UserWarning -m experiments.group_pruning \
   --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_full/ \
   --bias-strategies original --scorers ridge filter > results/group_pruning_full.log 2>&1 &
 ```
+
+### While Phase 6 runs: `experiments/analyse_bias.py` written and tested
+- New file for Phases 7 and 8 (`--all-fractions` adds every pruned configuration for Phase 8). Uses joint rows only (accuracy is identical across implementations); subgroups from TRAIN labels read from `--data`.
+- Smoke-tested on a scratch copy of the pilot CSV (2 seeds, so tests print `nan` below 10 non-zero differences).
+- Sanity check prompted by that test: uniform showed zero across-seed spread on all 5 pilot datasets. A direct check on Computers (uniform seeds 0–4 → accuracy 0.728, 0.728, 0.704, 0.740, 0.720; stratified 0.724, 0.728, 0.708, 0.712, 0.672; biases differ by ~1.0 on average between seeds) confirmed it was a coincidence of 2 seeds, not a seeding bug.
