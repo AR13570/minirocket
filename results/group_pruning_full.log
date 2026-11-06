@@ -50,3 +50,12 @@ Skipping AllGestureWiimoteY
 Skipping AllGestureWiimoteZ
   Variable-length series require explicit preprocessing
 ChlorineConcentration seed=2 original done
+CinCECGTorso seed=0 original done
+CinCECGTorso seed=1 original done
+CinCECGTorso seed=2 original done
+Coffee seed=0 original done
+Coffee seed=1 original done
+Coffee seed=2 original done
+Computers seed=0 original done
+Computers seed=1 original done
+Computers seed=2 original done

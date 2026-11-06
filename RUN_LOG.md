@@ -128,3 +128,4 @@ nohup .venv/bin/python -B -W ignore::UserWarning -m experiments.group_pruning \
 - Phases run **sequentially** (Phase 7 and 8 start only after Phase 6 finishes, so Phase 6 timings are not disturbed).
 - **Phase 8 excludes ElectricDevices and Crop** (the two largest; estimated ~55 h of the ~66 h). Phase 8 is run with `--datasets` listing every other dataset; the final report must name the two excluded datasets and the reason (runtime).
 - Phases 6 and 7 still use all datasets. Phase 7 is estimated at ~27 h, mostly ElectricDevices (~10 h) and Crop (~5 h); this is not a restriction from the user, so if its time becomes a problem, report before excluding anything.
+- Checkpoint 2026-11-06T23:24Z: 42 cases done, 0 mismatches so far; run alive.
