@@ -38,3 +38,15 @@ Chinatown seed=0 original done
 Chinatown seed=1 original done
 Chinatown seed=2 original done
 ChlorineConcentration seed=0 original done
+ChlorineConcentration seed=1 original done
+=== RESUME 2026-11-06T23:16:44Z ===
+
+Skipping AllGestureWiimoteX
+  Variable-length series require explicit preprocessing
+
+Skipping AllGestureWiimoteY
+  Variable-length series require explicit preprocessing
+
+Skipping AllGestureWiimoteZ
+  Variable-length series require explicit preprocessing
+ChlorineConcentration seed=2 original done

@@ -122,3 +122,4 @@ nohup .venv/bin/python -B -W ignore::UserWarning -m experiments.group_pruning \
 - Smoke-tested on a scratch copy of the pilot CSV (2 seeds, so tests print `nan` below 10 non-zero differences).
 - Sanity check prompted by that test: uniform showed zero across-seed spread on all 5 pilot datasets. A direct check on Computers (uniform seeds 0–4 → accuracy 0.728, 0.728, 0.704, 0.740, 0.720; stratified 0.724, 0.728, 0.708, 0.712, 0.672; biases differ by ~1.0 on average between seeds) confirmed it was a coincidence of 2 seeds, not a seeding bug.
 - Checkpoint 2026-11-06T22:07Z: 31 of ~339 (dataset, seed) cases done; partial CSV committed.
+- 2026-11-06T23:18Z: container restarted, run process had died after 32 cases (705 CSV lines incl. header). Resumed with the identical command plus `--resume` (same env vars), log appended.
