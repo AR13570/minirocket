@@ -416,7 +416,7 @@ Branch `group-pruning`; nothing pushed. The folder was not a git repository: `gi
 | `9badd2e` | Phase 11: final README, results index, environment freeze |
 | `fdfac44` | Full Phase 6 (113 datasets, 3 seeds, drop 0.2) completed by resuming; docs updated |
 | `540349a` | `final_analysis.py`, filter-vs-ridge and multiplicity tests |
-| `77939f5` | Documentation consolidated into one file |
+| `e872b3c` | Documentation consolidated into one file |
 | next | Controls run (random masks, smaller models), analysis and figure |
 
 Phase by phase:
