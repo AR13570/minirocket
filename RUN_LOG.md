@@ -28,3 +28,8 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 ## Update (Windows test fix)
 - Cause of failing existing tests: POSIX-only fcntl, os.sysconf, resource. Added compat_windows/{fcntl,sitecustomize,resource}.py (no protected file changed).
 - `PYTHONPATH="$PWD/code:$PWD/compat_windows" python -B -m unittest discover -s tests` -> Ran 64 tests, OK (skipped=1, ARM64-only check).
+
+## Update (Phase 6, scope reduced at user's request)
+- First full run (3 seeds, drop 0.2) killed after 53 cases (PID 35032); folder results/group_pruning_full/ is incomplete, not to be used.
+- New run: `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_full_drop30_1seed/ --bias-strategies original --scorers ridge filter --drop-fraction 0.3 --seeds 0 > results/group_pruning_full_drop30_1seed.log`
+- Started 2026-11-07 ~00:30. Settings documented in README_CHANGES.md section 8.

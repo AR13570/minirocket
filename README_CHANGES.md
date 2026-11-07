@@ -67,3 +67,27 @@ Phase 6 full run, Phase 7 stratified-bias study (+ `experiments/analyse_bias.py`
 **Use (Windows only):** `export PYTHONPATH="$PWD/code:$PWD/compat_windows"` (Git Bash) before running tests or `benchmarks.run`.
 **Result:** `python -B -m unittest discover -s tests` -> 64 tests, **OK (1 skipped)**. The skip is `test_small_width_helpers_vectorize_on_audited_runtime`, which is specific to the audited ARM64 runtime.
 **Caveats:** (a) on Windows, benchmark memory = peak working set, not the macOS physical footprint used in the published results, so do not compare memory with them (C9). (b) Locking uses byte 0 of the lock file; fine for the repo's non-blocking exclusive use. (c) Do not use the shims on Linux/macOS; they are not needed. (d) `experiments/group_pruning.py` does not need them.
+
+## 8. Phase 6 full pruning run: scope reduced (deviation from the runbook)
+**Planned (runbook):** all datasets, 3 seeds, `--drop-fraction 0.2` -> `results/group_pruning_full/`.
+**What happened:** that run was started 2026-11-06 23:33 and **stopped manually** on 2026-11-07 after 53 of ~339 (dataset, seed) cases (datasets up to Crop; Crop seed 2 unfinished). Reason: large datasets are slow (Crop took ~24 min for seed 0 and ~18 min for seed 1, because ridge selection refits a 7,200 x ~10,000 matrix every round), so the whole run would take many hours.
+`results/group_pruning_full/` is therefore **incomplete (no metadata.json, no report) and must not be used for any reported number.** It is kept only as a record; do not cite it.
+
+**Replacement run (the one that counts), settings:**
+| Setting | Value | Differs from runbook? |
+|---|---|---|
+| Output folder | `results/group_pruning_full_drop30_1seed/` | new folder |
+| Datasets | all available univariate datasets (no subset) | no |
+| Seeds | **1 (seed 0)** | yes (runbook: 3) |
+| `--drop-fraction` | **0.3** | yes (runbook: 0.2, i.e. fewer ridge elimination rounds) |
+| Bias strategy | `original` | no |
+| Scorers | `ridge`, `filter` | no |
+| Keep fractions | 1.0 0.75 0.5 0.3 0.2 0.1 (default) | no |
+| Feature count | 10,000 (9,996 actual) | no |
+| `NUMBA_NUM_THREADS` | 1 (BLAS threads in sklearn not limited) | no |
+Log: `results/group_pruning_full_drop30_1seed.log`.
+
+**Consequences to state in any report:**
+- One seed per dataset, so accuracy and time differences are single-run values; the dataset-bootstrap intervals in `summarise.py` reflect dataset mix only, not seed-to-seed noise.
+- With drop fraction 0.3 the ridge ranking removes groups in bigger steps, which can change which groups survive compared with 0.2. Results are not comparable with the pilot (0.2, 2 seeds) except qualitatively.
+- Selection time is lower than with 0.2, so break-even numbers are optimistic relative to the 0.2 setting.
