@@ -162,3 +162,15 @@ Stratified minus uniform, all 30 datasets (from `combined_analysis.md`): mean ac
 **Why:** CodeCarbon 3.3.2 on this machine (AMD Ryzen 9 8940HX, Windows 11; CPU reading source `windows_emi`) did not respond to CPU load. Diagnostic (20 s windows in alternating idle / busy-loop order, 7 windows): every window read 995 J of CPU energy (about 46 W) whether idle or busy. In the smoke test of the real transform, "net" energy (loaded minus idle) came out **negative** for every model and repetition (about -80 to -150 J per 30 s on GunPoint), which is impossible for a real measurement. So its CPU readings here are not a usable measurement of this workload (likely a power estimate, not a load-dependent counter). Following the runbook ("if power measurement is not available, skip this phase and log why"), energy was not run.
 **What the repo does support instead:** wall-clock test-transform time ratios (Phases 5, 6, 8; single-threaded, one machine). No energy or power claim should be made from this project. To get a real energy figure, run `experiments/energy.py` on Linux with an Intel CPU (RAPL) or add an external power meter; the script needs only the `measure()` helper swapped.
 The partial run output was deleted; the diagnostic code was not kept.
+
+## 13. Phase 10: 25,000-feature run (reduced)
+Folder `results/group_pruning_25k/` (+ `.log`). **Settings:** `--feature-count 25000` (actual 24,948 features, 1,579 groups); **10 datasets** (GunPoint ECG200 Beef Computers Wafer ECG5000 FacesUCR Trace Yoga EthanolLevel, chosen for mixed size, not tuned on results); **1 seed**; bias strategy original; scorers ridge and filter; keep fractions 1.0 0.5 0.2; `--drop-fraction 0.3`. 100 rows, **0 mismatches**.
+Mean over the 10 datasets (joint PPV, from `report.md`):
+| Variant | Groups | Features | Accuracy % | Delta pp | Test-transform time vs full (same impl) | Break-even series |
+|---|---:|---:|---:|---:|---:|---:|
+| full | 1,579 | 24,948 | 88.90 | 0 | 1.000 | n/a |
+| ridge 50% | 790 | 11,559 | 89.04 | +0.14 | 0.457 | 398 |
+| ridge 20% | 316 | 4,314 | 89.02 | +0.13 | 0.183 | 475 |
+| filter 50% | 790 | 14,729 | 88.59 | -0.31 | 0.600 | 34 |
+| filter 20% | 316 | 7,017 | 88.57 | -0.33 | 0.304 | 0 |
+Reading (10 datasets, 1 seed: descriptive only): pruning to 20% of groups kept accuracy at the full-model level here and cut transform time to about 0.18-0.30 of the full model. The full model's joint PPV was **not** faster than original pooling in this sample (ratio 1.006, versus 0.806 over 113 datasets at 10k features in Phase 6); the dataset mix differs, so do not compare the two numbers directly. In the full model, test-time classifier work (predict) is a visible share for the larger datasets (e.g. 0.33 s predict vs 2.2 s transform on Wafer), as the README predicted.
