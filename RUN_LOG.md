@@ -44,3 +44,7 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 
 ## Update (Phase 8 finished)
 - results/group_pruning_combined_30ds_5seeds/: 300 cases, 3600 rows, 0 mismatches; summarise + `analyse_bias --by-keep-fraction` run. Results in README_CHANGES.md section 11.
+
+## Update (Phase 9 skipped; Phase 10 started)
+- Phase 9: codecarbon installed (pip). Diagnostic showed constant ~995 J per 21 s window regardless of load; real-transform smoke test gave negative net energy. Skipped per runbook; reason in README_CHANGES.md section 12.
+- Phase 10 started: `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_25k/ --datasets GunPoint ECG200 Beef Computers Wafer ECG5000 FacesUCR Trace Yoga EthanolLevel --bias-strategies original --scorers ridge filter --keep-fractions 1.0 0.5 0.2 --seeds 0 --drop-fraction 0.3 --feature-count 25000 > results/group_pruning_25k.log`
