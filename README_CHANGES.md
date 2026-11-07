@@ -136,3 +136,23 @@ Result, stratified minus uniform (accuracy, pp; paired over datasets; from `bias
 Control, original minus uniform (RNG policy only): mean diff +0.061 pp, p = 0.290 over all 30.
 
 **Honest reading:** the average effect of stratification is null (-0.03 pp, p = 0.35), and stratified did **not** have lower seed-to-seed variance (std lower on 9 datasets, higher on 14; mean std 0.73 vs 0.65 pp). The only nominally significant cell is the imbalanced subgroup, where stratified was slightly *worse* (-0.10 pp, p = 0.012). That p-value is unadjusted across several subgroup tests on 9 datasets and is exploratory; it should not be presented as an established effect. A null result is a valid finding (as the README anticipated). The original-vs-uniform difference is also within noise, so the RNG-policy change is not a confounder here. With 10 seeds and 30 datasets power is limited, and only `examples_per_group=1` was tried.
+
+## 11. Phase 8: combined run (stratified/uniform biases x pruning), reduced scope
+Folder `results/group_pruning_combined_30ds_5seeds/` (measurements.csv, summary.csv, report.md, `combined_analysis.md`, metadata.json). `analyse_bias.py --by-keep-fraction` produced `combined_analysis.md`.
+**Settings (deviations in bold):** strategies uniform, stratified; **the same 30-dataset subset as Phase 7**; **5 seeds (0-4)**; **scorer ridge only**; **`--drop-fraction 0.3`** (as Phase 6); keep fractions 1.0 0.75 0.5 0.3 0.2 0.1. Command: `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_combined_30ds_5seeds/ --datasets <30 names in bias_study_subset.csv> --bias-strategies uniform stratified --seeds 0 1 2 3 4 --drop-fraction 0.3 --scorers ridge`. Reason for the subset: the all-dataset version (113 datasets x 5 seeds x 2 strategies) would take roughly 10 hours.
+**Exactness:** 3,600 rows, 0 mismatches.
+
+Mean over the 30 datasets (ridge scorer, joint PPV, from `report.md`):
+| Groups kept | Acc % stratified | Acc % uniform | Delta vs full, stratified | Delta vs full, uniform | Time ratio (same impl) |
+|---:|---:|---:|---:|---:|---:|
+| 100% | 81.56 | 81.58 | 0 | 0 | 1.000 |
+| 75% | 81.60 | 81.54 | +0.03 | -0.04 | 0.69 |
+| 50% | 81.45 | 81.45 | -0.12 | -0.14 | 0.475 |
+| 30% | 81.13 | 80.96 | -0.43 | -0.62 | 0.31 |
+| 20% | 80.60 | 80.45 | -0.97 | -1.14 | 0.22 |
+| 10% | 79.76 | 79.27 | -1.81 | -2.32 | 0.14 |
+Median break-even is about 370-490 series for both strategies at every keep level.
+
+Stratified minus uniform, all 30 datasets (from `combined_analysis.md`): mean accuracy difference -0.02 pp (full), +0.06 (75%), 0.00 (50%), +0.17 (30%), +0.15 (20%), **+0.49 (10%)**; Wilcoxon p = 0.77, 0.31, 0.98, 0.44, 0.41, **0.046**. Seed-to-seed std (pp), stratified vs uniform: 0.64 vs 0.65 (full), 0.64/0.62 (75%), 0.91/0.84 (50%), 0.97/1.13 (30%), 1.06/1.23 (20%), 1.36/1.59 (10%).
+
+**Honest reading:** stratified biases make no difference to the full model. At heavy pruning (30% of groups or fewer) the stratified models were on average 0.15-0.5 pp more accurate and had lower seed-to-seed spread, which is in the direction the project hoped for. But only the 10% slice reaches p < 0.05 (0.046, unadjusted, one of six slices tested, so it would not survive a multiple-comparison correction), the std comparisons are not significant (p = 0.17-0.81), and this is 5 seeds on 30 datasets with ridge only. Treat it as a hint worth a larger study, not a finding. Per-subgroup tables (imbalanced, small, rest) are in `combined_analysis.md`.
