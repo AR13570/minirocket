@@ -298,7 +298,7 @@ python -B -m unittest discover -s tests               # 64 tests OK, 1 skipped (
 python tools/generate_joint_ppv.py --check            # kernels current
 ```
 
-Use `NUMBA_NUM_THREADS=1`, a quiet machine, and the same machine for every timing you compare. All runs use `python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir <folder> ...` and then `python -B -m experiments.summarise <folder>`. `DS30` is the 30 names in `results/bias_study_subset.csv`. Code under test did not change after commit `1dabf25` (`minirocket_pruned.py`, `minirocket_stratified.py`, `group_pruning.py`, `summarise.py`); later commits only added scripts and documents.
+Use `NUMBA_NUM_THREADS=1`, a quiet machine, and the same machine for every timing you compare. All runs use `python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir <folder> ...` and then `python -B -m experiments.summarise <folder>`. `DS30` is the 30 names in `results/bias_study_subset.csv`. Code under test did not change after commit `bc61003` (`minirocket_pruned.py`, `minirocket_stratified.py`, `group_pruning.py`, `summarise.py`); later commits only added scripts and documents.
 
 | Folder | Arguments after `--output-dir <folder>` |
 |---|---|
@@ -401,22 +401,22 @@ Result: `python -B -m unittest discover -s tests` gives 64 tests OK, 1 skipped (
 
 ## Chronological log
 
-Branch `group-pruning`; nothing pushed. The folder was not a git repository: `git init`, baseline commit `8aa4ae2` of the existing files, new work from `1dabf25`. The empty embedded repo `minirocket/` was removed from the index with `git rm --cached` and the folder left untouched. Commit `0b1c245` named in the runbook does not exist here, so the reference CSVs were downloaded from the authors' GitHub repository. Data: `data/UCR-univariate.zip` (258 MB) from timeseriesclassification.com, extracted to `data/Univariate_ts/` (128 entries; not committed). No venv; the installed packages were used (Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 1.8.0, scipy 1.17.1, aeon 1.5.0, llvmlite 0.46.0, pandas 2.3.3; codecarbon 3.3.2 installed later for the energy attempt).
+Branch `group-pruning`; nothing pushed. The folder was not a git repository: `git init`, baseline commit `8aa4ae2` of the existing files, new work from `bc61003`. The empty embedded repo `minirocket/` was removed from the index with `git rm --cached` and the folder left untouched. Commit `0b1c245` named in the runbook does not exist here, so the reference CSVs were downloaded from the authors' GitHub repository. Data: `data/UCR-univariate.zip` (258 MB) from timeseriesclassification.com, extracted to `data/Univariate_ts/` (128 entries; not committed). No venv; the installed packages were used (Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 1.8.0, scipy 1.17.1, aeon 1.5.0, llvmlite 0.46.0, pandas 2.3.3; codecarbon 3.3.2 installed later for the energy attempt).
 
 | Commit | What |
 |---|---|
 | `8aa4ae2` | Baseline: the repository as given |
-| `1dabf25` | The six supplied code/test/experiment files, `sanity_keepall.py`, reference CSVs, pilot |
-| `0730e36` | Windows shims; existing suite now runs (64 OK, 1 skipped) |
-| `fe4cedf`, `9dfc8d9` | Reduced-scope Phase 6 (1 seed, drop 0.3, 113 datasets) documented and run |
-| `6b2f8ad` | Phase 7: stratified-bias study and `analyse_bias.py` |
-| `18eac86` | Phase 8: combined run |
-| `7bba041` | Phase 9: energy script and why the measurement was skipped |
-| `5890c97` | Phase 10: 25k run |
-| `87c461b` | Phase 11: final README, results index, environment freeze |
-| `2eacc28` | Full Phase 6 (113 datasets, 3 seeds, drop 0.2) completed by resuming; docs updated |
-| `7921931` | `final_analysis.py`, filter-vs-ridge and multiplicity tests |
-| `6109db1` | Documentation consolidated into two files |
+| `bc61003` | The six supplied code/test/experiment files, `sanity_keepall.py`, reference CSVs, pilot |
+| `1422b55` | Windows shims; existing suite now runs (64 OK, 1 skipped) |
+| `926c176`, `7f3d0aa` | Reduced-scope Phase 6 (1 seed, drop 0.3, 113 datasets) documented and run |
+| `c4b78ae` | Phase 7: stratified-bias study and `analyse_bias.py` |
+| `6290fb8` | Phase 8: combined run |
+| `93c0984` | Phase 9: energy script and why the measurement was skipped |
+| `640558b` | Phase 10: 25k run |
+| `9badd2e` | Phase 11: final README, results index, environment freeze |
+| `fdfac44` | Full Phase 6 (113 datasets, 3 seeds, drop 0.2) completed by resuming; docs updated |
+| `540349a` | `final_analysis.py`, filter-vs-ridge and multiplicity tests |
+| `77939f5` | Documentation consolidated into two files |
 | next | Controls run (random masks, smaller models), analysis and figure |
 
 Phase by phase:
