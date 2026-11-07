@@ -46,7 +46,7 @@ Mean paired difference +0.014 pp, median 0.000. Two datasets differ by more than
 | filter-pruned 50%, joint PPV | 799 | 5,555 | 86.03% | -0.05 pp | 0.463 | 25 |
 | filter-pruned 20%, joint PPV | 320 | 2,455 | 85.29% | -0.79 pp | 0.232 | 0 (cheaper to train than full) |
 
-Findings: test-transform time falls roughly in proportion to groups kept and the joint-PPV saving carries over to the kept groups; moderate pruning (50% of groups) costs 0.05-0.3 pp, heavy pruning (10%) 1.4-2.2 pp. The cheap `filter` ranking was more accurate than `ridge` at every level (not tested for significance), but keeps more features and so is slightly slower at the same group count. Ridge selection costs several times the full model's training, so it repays only after roughly 1,000 test series; `filter` repays after about 25 (50% of groups) or immediately. The full table (75%, 30%, 10%, bootstrap intervals, train-cost ratios) is in that folder's `report.md`.
+Findings: test-transform time falls roughly in proportion to groups kept and the joint-PPV saving carries over to the kept groups; moderate pruning (50% of groups) costs 0.05-0.3 pp, heavy pruning (10%) 1.4-2.2 pp. The cheap `filter` ranking was at least as accurate as `ridge` at every level (same sign everywhere; only the 10% level is nominally significant, p=0.038, uncorrected; see `FINAL_ANALYSIS.md`), but keeps more features and so is slightly slower at the same group count. Ridge selection costs several times the full model's training, so it repays only after roughly 1,000 test series; `filter` repays after about 25 (50% of groups) or immediately. The full table (75%, 30%, 10%, bootstrap intervals, train-cost ratios) is in that folder's `report.md`.
 
 **Secondary pruning run** (`results/group_pruning_full_drop30_1seed/`: same datasets, 1 seed, drop fraction 0.3): same conclusions, e.g. ridge 50%: -0.38 pp at 0.359 of full-original time; ridge 20%: -1.55 pp at 0.170; break-even about 530-580 series for ridge. It was run first as a faster substitute and is kept as a robustness check on the drop fraction.
 
@@ -194,7 +194,7 @@ Exact commands, in order, are in [`results/README_RESULTS.md`](./results/README_
 - **Energy:** no valid measurement (next section).
 - **SIMD audit test** (`test_small_width_helpers_vectorize_on_audited_runtime`) is specific to ARM64 and was skipped; SIMD behaviour of the sliced-view pooling calls was checked only indirectly through the keep-all timing above.
 - **Bitwise ties:** none were observed, so V3 never triggered.
-- **Seed noise** is not separated out of the dataset-bootstrap intervals; there is no significance test of `filter` vs `ridge` (the gap is consistent across keep levels but untested); statistical power inside the 30-dataset subgroups is low.
+- **Seed noise** is not separated out of the dataset-bootstrap intervals; the `filter` vs `ridge` gap has the same sign at every keep level but is nominally significant only at 10% (p=0.038, uncorrected; `results/final_analysis_tables.md`); statistical power inside the 30-dataset subgroups is low.
 - **Memory comparisons** with the published macOS results (C9).
 - **Cross-machine timing:** all timings come from one Windows desktop (AMD Ryzen 9 8940HX, 32 logical CPUs) with `NUMBA_NUM_THREADS=1` but unrestricted BLAS threads in scikit-learn; use ratios, not absolute seconds.
 
