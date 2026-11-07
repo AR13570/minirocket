@@ -52,3 +52,7 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 ## Update (Phase 10 finished, Phase 11 done)
 - Phase 10: results/group_pruning_25k/, 100 rows, 0 mismatches.
 - Phase 11: README_GROUP_PRUNING.md, results/README_RESULTS.md, results/environment_freeze.txt written. Final tests: 64 OK (1 skipped). Protected-file diff vs baseline empty.
+
+## Update (full Phase 6 as originally planned, started 2026-11-07)
+- Resumed the stopped run (same settings: all datasets, seeds 0 1 2, original biases, ridge+filter, drop fraction 0.2 default): `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_full/ --bias-strategies original --scorers ridge filter --resume >> results/group_pruning_full.log`
+- 53 complete cases already in measurements.csv (datasets up to Crop seed 1); code unchanged since 1dabf25 (empty git diff). Those 53 cases were timed in the earlier session, the rest in this one.
