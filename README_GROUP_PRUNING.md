@@ -8,7 +8,7 @@
 
 Status: **implemented, tested under real Numba, and run on the UCR univariate archive** (the primary pruning run at the full planned size, the other studies at reduced scope; see [Scope](#scope-of-what-was-run)). Energy was **not** measured (see [Energy](#energy-not-measured)).
 
-This is the single technical document for the new work: results, analysis, every file added, every deviation, the exact commands, and the run log. The existing [README](./README.md) and [benchmark guide](./benchmarks/README.md) are unchanged. A plain-language walkthrough with analogies is in [`PROJECT_EXPLAINED.md`](./PROJECT_EXPLAINED.md).
+This is the single technical document for the new work: results, analysis, every file added, every deviation, the exact commands, and the run log. The existing [README](./README.md) and [benchmark guide](./benchmarks/README.md) are unchanged.
 
 ## Contents
 
@@ -227,7 +227,7 @@ Consequences: dataset-bootstrap intervals describe dataset mix, not seed noise; 
 | [`experiments/analyse_controls.py`](./experiments/analyse_controls.py) | Scratch | Paired tests against the controls; accuracy-vs-time figure |
 | [`experiments/energy.py`](./experiments/energy.py) | Scratch | CodeCarbon CPU energy minus idle (written and tested; no valid results here, see [Energy](#energy-not-measured)) |
 | [`compat_windows/`](./compat_windows) | Scratch | Windows stand-ins for `fcntl`, `resource`, `os.sysconf` (see [Windows compatibility](#windows-compatibility)) |
-| `README_GROUP_PRUNING.md` (this file), `PROJECT_EXPLAINED.md` | Adapted / Scratch | The only two documents for this work |
+| `README_GROUP_PRUNING.md` (this file) | Adapted | The single document for this work |
 | `results/reference/` | Fetched + generated | Authors' published CSVs (`results_ucr109_mean.csv`, `accuracy_ucr109_resamples.csv`) and `paper_vs_ours.csv` |
 | `results/group_pruning_*/`, `results/*.log` | Generated | Per-run `measurements.csv`, `summary.csv`, `report.md`, `metadata.json`, plus analysis markdown and console logs |
 | `results/final_analysis_tables.md`, `results/dataset_stats.csv`, `results/bias_study_subset.csv`, `results/environment_freeze.txt` | Generated | Final tests; dataset properties and subset; `pip freeze` (179 lines, the whole user-site environment, not a clean venv) |
@@ -416,7 +416,7 @@ Branch `group-pruning`; nothing pushed. The folder was not a git repository: `gi
 | `9badd2e` | Phase 11: final README, results index, environment freeze |
 | `fdfac44` | Full Phase 6 (113 datasets, 3 seeds, drop 0.2) completed by resuming; docs updated |
 | `540349a` | `final_analysis.py`, filter-vs-ridge and multiplicity tests |
-| `77939f5` | Documentation consolidated into two files |
+| `77939f5` | Documentation consolidated into one file |
 | next | Controls run (random masks, smaller models), analysis and figure |
 
 Phase by phase:
