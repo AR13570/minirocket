@@ -119,3 +119,20 @@ Time-ratio 95% intervals (dataset bootstrap) are in `report.md`; all are narrow 
 - The cheap `filter` scorer was at least as accurate as `ridge` at every keep level in this run (e.g. 50%: -0.14 vs -0.38 pp), while keeping more features (5,558 vs 4,508), so its time ratio is slightly worse. Do not conclude filter is better without more seeds; one seed and a different feature count make this a weak comparison.
 - Break-even: `ridge` selection costs more than the inference saved for a few hundred series (median 472-656); `filter` repays quickly (23 series at 50%) or immediately (0 means total training cost is already below the unpruned model, because the classifier fit on fewer features saves more than the cheap ranking costs). Training-cost ratio values are in `report.md` (filter 30%: 0.53; ridge 30%: 3.28).
 - Timings come from one Windows desktop; compare ratios, not absolute seconds.
+
+## 10. Phase 7: stratified-bias study (reduced scope)
+Folder `results/group_pruning_bias_30ds_10seeds/` (measurements.csv, metadata.json, `bias_analysis.md`). New file `experiments/analyse_bias.py` (not in the supplied documents; written per runbook Phase 7). Dataset statistics: `results/dataset_stats.csv`; chosen subset: `results/bias_study_subset.csv`.
+**Settings (deviations from the runbook in bold):** strategies original, uniform, stratified; keep fraction 1.0 only; **10 seeds (0-9) instead of 20; 30 datasets instead of all 113**; default feature count 10,000; `--examples-per-group 1`. Command: `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_bias_30ds_10seeds/ --datasets <30 names in bias_study_subset.csv> --bias-strategies original uniform stratified --keep-fractions 1.0 --seeds 0 1 2 3 4 5 6 7 8 9`.
+**Subset rule (fixed before running, not chosen by hand):** all 113 usable datasets were classed as imbalanced (smallest TRAIN class share < 20%: 57 datasets), small (< 100 TRAIN series, not imbalanced: 26), or rest (30); within each class, 10 evenly spaced in alphabetical order. Note that the "imbalanced" rule also catches balanced datasets with more than 5 classes.
+**Exactness:** 1,800 rows (900 cases x 2 implementations), 0 mismatches.
+
+Result, stratified minus uniform (accuracy, pp; paired over datasets; from `bias_analysis.md`):
+| Subgroup | Datasets | Mean diff | Wins/ties/losses | Wilcoxon p (n non-zero) | Seed-to-seed std, stratified vs uniform (pp) |
+|---|---:|---:|---|---|---|
+| all | 30 | -0.032 | 8/8/14 | 0.353 (22) | 0.727 vs 0.652 |
+| imbalanced | 10 | -0.097 | 1/1/8 | 0.012 (9) | 0.619 vs 0.541 |
+| small | 10 | -0.039 | 2/5/3 | 0.812 (5) | 0.826 vs 0.787 |
+| rest | 10 | +0.041 | 5/2/3 | 0.461 (8) | 0.736 vs 0.627 |
+Control, original minus uniform (RNG policy only): mean diff +0.061 pp, p = 0.290 over all 30.
+
+**Honest reading:** the average effect of stratification is null (-0.03 pp, p = 0.35), and stratified did **not** have lower seed-to-seed variance (std lower on 9 datasets, higher on 14; mean std 0.73 vs 0.65 pp). The only nominally significant cell is the imbalanced subgroup, where stratified was slightly *worse* (-0.10 pp, p = 0.012). That p-value is unadjusted across several subgroup tests on 9 datasets and is exploratory; it should not be presented as an established effect. A null result is a valid finding (as the README anticipated). The original-vs-uniform difference is also within noise, so the RNG-policy change is not a confounder here. With 10 seeds and 30 datasets power is limited, and only `examples_per_group=1` was tried.

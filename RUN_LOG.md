@@ -37,3 +37,7 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 ## Update (Phase 6 finished)
 - results/group_pruning_full_drop30_1seed/: 113 datasets run, 15 skipped by loader (variable length / missing values), 2486 rows, 0 mismatches. `python -B -m experiments.summarise results/group_pruning_full_drop30_1seed/` OK. Results written to README_CHANGES.md section 9.
 - Not started: Phase 7 (stratified-bias study), 8, 9, 10, 11.
+
+## Update (Phase 7 finished, Phase 8 started)
+- Phase 7: results/group_pruning_bias_30ds_10seeds/, 900 cases, 1800 rows, 0 mismatches; `python -B -m experiments.analyse_bias results/group_pruning_bias_30ds_10seeds/` -> bias_analysis.md. Null effect; see README_CHANGES.md section 10.
+- Phase 8 started: `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_combined_30ds_5seeds/ --datasets <same 30> --bias-strategies uniform stratified --seeds 0 1 2 3 4 --drop-fraction 0.3 --scorers ridge > results/group_pruning_combined_30ds_5seeds.log`
