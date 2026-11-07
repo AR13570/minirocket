@@ -6,14 +6,13 @@ All runs: Windows 11 (10.0.26200), AMD Ryzen 9 8940HX (32 logical CPUs), Python 
 |---|---|---|---|
 | `reference/` | Authors' published numbers + paper-vs-ours table | `python -B -m experiments.compare_to_paper` | CSVs fetched from github.com/angus924/minirocket `results/`; table made at 1dabf25 |
 | `group_pruning_pilot/` | Pilot: 5 datasets, 2 seeds, 3 strategies, drop 0.2 | `python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_pilot/ --datasets GunPoint ECG200 Beef Computers Wafer --seeds 0 1 --keep-fractions 1.0 0.5 0.2 --scorers ridge filter` then `experiments.summarise` | 1dabf25 (+ runner unchanged) |
-| `group_pruning_full_drop30_1seed/` | Phase 6: 113 datasets, 1 seed, original biases, ridge+filter, drop 0.3 | `--output-dir ./results/group_pruning_full_drop30_1seed/ --bias-strategies original --scorers ridge filter --drop-fraction 0.3 --seeds 0` then `experiments.summarise` | 1dabf25 logic |
+| `group_pruning_full/` | **Phase 6 primary**: 113 datasets, 3 seeds, original biases, ridge+filter, drop 0.2 (7,458 rows). Started, stopped after 53 cases, resumed to completion with the same command + `--resume` | `--output-dir ./results/group_pruning_full/ --bias-strategies original --scorers ridge filter` (+ `--resume` for the second session) then `experiments.summarise` | 1dabf25 logic |
+| `group_pruning_full_drop30_1seed/` | Phase 6 secondary: 113 datasets, 1 seed, original biases, ridge+filter, drop 0.3 | `--output-dir ./results/group_pruning_full_drop30_1seed/ --bias-strategies original --scorers ridge filter --drop-fraction 0.3 --seeds 0` then `experiments.summarise` | 1dabf25 logic |
 | `group_pruning_bias_30ds_10seeds/` | Phase 7: stratified study, 30 datasets, 10 seeds, keep 1.0 | `--datasets DS30 --bias-strategies original uniform stratified --keep-fractions 1.0 --seeds 0 1 2 3 4 5 6 7 8 9` then `experiments.analyse_bias <folder>` | 1dabf25 logic |
 | `group_pruning_combined_30ds_5seeds/` | Phase 8: combined, 30 datasets, 5 seeds, ridge, drop 0.3 | `--datasets DS30 --bias-strategies uniform stratified --seeds 0 1 2 3 4 --drop-fraction 0.3 --scorers ridge` then `experiments.summarise` and `experiments.analyse_bias <folder> --by-keep-fraction` | 1dabf25 logic |
 | `group_pruning_25k/` | Phase 10: 24,948 features, 10 datasets, 1 seed | `--datasets GunPoint ECG200 Beef Computers Wafer ECG5000 FacesUCR Trace Yoga EthanolLevel --bias-strategies original --scorers ridge filter --keep-fractions 1.0 0.5 0.2 --seeds 0 --drop-fraction 0.3 --feature-count 25000` then `experiments.summarise` | 1dabf25 logic |
 | `dataset_stats.csv`, `bias_study_subset.csv` | Per-dataset sizes / class shares; the 30-dataset subset and its group labels | generated once from the archive (rule in `README_CHANGES.md` section 10) | after 1dabf25 |
 
-Not in the index on purpose:
-- `group_pruning_full/` (+ `group_pruning_full.log`, untracked): an earlier 3-seed, drop-0.2 run stopped after 53 cases. **Incomplete; do not cite.**
-- Energy: no results (see `README_GROUP_PRUNING.md`, Energy).
+Not in the index on purpose: energy (no valid measurement, see `README_GROUP_PRUNING.md`, Energy).
 
-Notes: per-case timings are single-run on a desktop that was otherwise idle but not isolated; compare ratios, not seconds. Pruning (Phase 6, 8, 10) used 1-5 seeds and so carries no seed-noise estimate for Phase 6 and 10.
+Notes: per-case timings are single-run on a desktop that was otherwise idle but not isolated; compare ratios, not seconds. The primary pruning run used 3 seeds (its first 53 cases were timed in an earlier session); the drop-0.3 pruning run and the 25k run used 1 seed.

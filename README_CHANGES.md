@@ -71,7 +71,7 @@ Phase 6 full run, Phase 7 stratified-bias study (+ `experiments/analyse_bias.py`
 ## 8. Phase 6 full pruning run: scope reduced (deviation from the runbook)
 **Planned (runbook):** all datasets, 3 seeds, `--drop-fraction 0.2` -> `results/group_pruning_full/`.
 **What happened:** that run was started 2026-11-06 23:33 and **stopped manually** on 2026-11-07 after 53 of ~339 (dataset, seed) cases (datasets up to Crop; Crop seed 2 unfinished). Reason: large datasets are slow (Crop took ~24 min for seed 0 and ~18 min for seed 1, because ridge selection refits a 7,200 x ~10,000 matrix every round), so the whole run would take many hours.
-`results/group_pruning_full/` is therefore **incomplete (no metadata.json, no report) and must not be used for any reported number.** It is kept only as a record; do not cite it.
+`results/group_pruning_full/` was therefore incomplete at that point. **Superseded: the run was later resumed to completion, see section 15.**
 
 **Replacement run (the one that counts), settings:**
 | Setting | Value | Differs from runbook? |
@@ -180,5 +180,23 @@ Reading (10 datasets, 1 seed: descriptive only): pruning to 20% of groups kept a
 - `results/README_RESULTS.md` (folder index: command, commit, environment) and `results/environment_freeze.txt` (`pip freeze`, 179 lines; it is the whole user-site Python environment, not a clean venv).
 - Final checks: `python -B -m unittest discover -s tests` -> 64 tests OK (1 skipped, ARM64-only); `python tools/generate_joint_ppv.py --check` -> current; `git diff` of the ten protected files against the baseline commit `8aa4ae2` -> empty.
 - `RUNBOOK_CLAUDE_CODE.md` was not copied into the repo (it is the user's own instruction file).
-- Left untracked on purpose: `results/group_pruning_full/` and `results/group_pruning_full.log` (the stopped, incomplete run; delete or keep as you prefer).
 
+## 15. Phase 6 as originally planned: full run completed
+Folder `results/group_pruning_full/` (+ `results/group_pruning_full.log`). **Settings (the runbook's): all usable datasets (113; the same 15 skipped by the loader), 3 seeds (0, 1, 2), bias strategy original, scorers ridge and filter, drop fraction 0.2 (default), keep fractions 1.0 0.75 0.5 0.3 0.2 0.1, 10,000 features.**
+How it ran: started 2026-11-06 23:33, stopped after 53 complete cases (section 8), then **resumed with the identical command plus `--resume`** on 2026-11-07 (the resume skips complete (dataset, seed, strategy) cases; the code under test was unchanged, empty `git diff` against 1dabf25). The first 53 cases (datasets up to Crop seed 1) were therefore timed in the earlier session and the other 286 in the later one, on the same machine. Total: 339 cases, 7,458 rows, **0 mismatches**, 0 errors, about 9 hours of wall time in total.
+Mean over 113 datasets (ridge/filter, joint PPV; from `report.md`; accuracy delta vs the unpruned model; time = TEST transform):
+| Scorer | Groups kept | Features | Accuracy % | Delta pp | Time ratio (same impl) | Time ratio vs full original | Median break-even (series) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| none (full) | 1,598 | 9,996 | 86.08 | 0 | 1.000 | 0.811 (joint PPV alone) | n/a |
+| filter | 75% | 7,946 | 86.07 | -0.01 | 0.811 | 0.657 | 233 |
+| filter | 50% | 5,555 | 86.03 | -0.05 | 0.570 | 0.463 | 25 |
+| filter | 30% | 3,538 | 85.68 | -0.40 | 0.384 | 0.311 | 0 |
+| filter | 20% | 2,455 | 85.29 | -0.79 | 0.285 | 0.232 | 0 |
+| filter | 10% | 1,268 | 84.65 | -1.43 | 0.175 | 0.142 | 0 |
+| ridge | 75% | 7,133 | 85.97 | -0.11 | 0.672 | 0.545 | 1,347 |
+| ridge | 50% | 4,527 | 85.81 | -0.27 | 0.447 | 0.362 | 1,019 |
+| ridge | 30% | 2,582 | 85.29 | -0.79 | 0.288 | 0.233 | 1,017 |
+| ridge | 20% | 1,654 | 84.78 | -1.30 | 0.212 | 0.172 | 993 |
+| ridge | 10% | 784 | 83.85 | -2.23 | 0.138 | 0.112 | 1,068 |
+Seeds are averaged inside each dataset first; the bootstrap intervals (in `report.md`) resample datasets, so they describe dataset mix, not seed noise.
+**Reading:** with 3 seeds the picture matches the 1-seed run: time falls roughly in proportion to groups kept, joint PPV's saving carries over, and the accuracy cost is small at moderate pruning (50% of groups: -0.05 pp filter, -0.27 pp ridge). Here the cheap `filter` scorer is more accurate than `ridge` at every keep level while keeping more features (e.g. 50%: 5,555 vs 4,527), so its transform is slightly slower (0.570 vs 0.447). The gap is consistent but was not tested for significance. Ridge selection at drop 0.2 costs several times the full model's training cost (train-cost ratio about 4-5, see `report.md`), so its median break-even is about 1,000 series (about 550 at drop 0.3 in the 1-seed run); `filter` repays within about 25 series at 50% of groups and is cheaper to train than the full model at 30% of groups or fewer. Drop 0.2 vs 0.3: ridge accuracy deltas are similar (e.g. 20%: -1.30 vs -1.55 pp); differences between the two runs mix drop fraction, number of seeds and session timing, so they are not a controlled comparison.

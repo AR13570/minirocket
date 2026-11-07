@@ -25,7 +25,7 @@ This document describes only the new work. The existing [README](./README.md) an
 
 ## Results
 
-All numbers below are copied from files under `results/`. Pruning results are **single-seed** (Phase 6) and so are descriptive.
+All numbers below are copied from files under `results/`. The primary pruning run uses 3 seeds; the secondary pruning run, the 25k run and the combined and bias studies have fewer seeds or datasets, as stated.
 
 **Reproduction check.** Original MiniRocket from the joint-PPV run (9,996 features, supplied split, mean of 3 fitting seeds) against the authors' published per-dataset numbers (their resample 0, which the paper says includes the default split), on the 109 datasets both cover (`results/reference/paper_vs_ours.csv`, from [`experiments/compare_to_paper.py`](./experiments/compare_to_paper.py)).
 
@@ -35,18 +35,20 @@ All numbers below are copied from files under `results/`. Pruning results are **
 
 Mean paired difference +0.014 pp, median 0.000. Two datasets differ by more than 2 pp (BeetleFly +3.3, Computers +2.5) and none by more than 2 of the paper's own standard deviations. Wilcoxon p = 0.582: no systematic difference. The paper's 30-resample mean (87.24%) uses a different protocol and must not be compared with a single split. The authors' CSVs were fetched from github.com/angus924/minirocket (`results/`).
 
-**Group pruning** (`results/group_pruning_full_drop30_1seed/`: 113 datasets, 1 seed, bias strategy original, drop fraction 0.3, 10,000 features). Mean over datasets, joint PPV. Time = TEST transform, single thread, one Windows machine. Pruned features equal `full[:, kept]` in all 2,486 rows.
+**Group pruning, primary run** (`results/group_pruning_full/`: 113 datasets, **3 seeds**, bias strategy original, drop fraction 0.2, 10,000 features; the runbook's plan). Mean over datasets (seeds averaged within each dataset), joint PPV. Time = TEST transform, single thread, one Windows machine. Pruned features equal `full[:, kept]` in all 7,458 rows.
 
 | Variant | Groups kept | Features | Accuracy | Delta vs full | Test transform vs full original | Break-even series |
 |---|---:|---:|---:|---:|---:|---:|
-| full, original transform | 1,598 (100%) | 9,996 | 86.07% | 0 | 1.000 | n/a |
-| full, joint PPV | 1,598 (100%) | 9,996 | 86.07% | 0 | 0.806 | n/a |
-| ridge-pruned 50%, joint PPV | 799 | 4,508 | 85.70% | -0.38 pp | 0.359 | 530 |
-| ridge-pruned 20%, joint PPV | 320 | 1,654 | 84.53% | -1.55 pp | 0.170 | 578 |
-| filter-pruned 50%, joint PPV | 799 | 5,558 | 85.94% | -0.14 pp | 0.460 | 23 |
-| filter-pruned 20%, joint PPV | 320 | 2,457 | 85.20% | -0.88 pp | 0.230 | 0 (cheaper to train than full) |
+| full, original transform | 1,598 (100%) | 9,996 | 86.08% | 0 | 1.000 | n/a |
+| full, joint PPV | 1,598 (100%) | 9,996 | 86.08% | 0 | 0.811 | n/a |
+| ridge-pruned 50%, joint PPV | 799 | 4,527 | 85.81% | -0.27 pp | 0.362 | 1,019 |
+| ridge-pruned 20%, joint PPV | 320 | 1,654 | 84.78% | -1.30 pp | 0.172 | 993 |
+| filter-pruned 50%, joint PPV | 799 | 5,555 | 86.03% | -0.05 pp | 0.463 | 25 |
+| filter-pruned 20%, joint PPV | 320 | 2,455 | 85.29% | -0.79 pp | 0.232 | 0 (cheaper to train than full) |
 
-Findings: test-transform time falls roughly in proportion to groups kept and the joint-PPV saving carries over to the kept groups; moderate pruning (50% of groups) costs 0.1-0.4 pp, heavy pruning (10%) 1.6-2.4 pp. The cheap `filter` ranking was at least as accurate as `ridge` at every level in this run, but keeps more features; one seed makes that comparison weak. The full table (75% and 10% too, bootstrap intervals, train-cost ratios) is in that folder's `report.md`.
+Findings: test-transform time falls roughly in proportion to groups kept and the joint-PPV saving carries over to the kept groups; moderate pruning (50% of groups) costs 0.05-0.3 pp, heavy pruning (10%) 1.4-2.2 pp. The cheap `filter` ranking was more accurate than `ridge` at every level (not tested for significance), but keeps more features and so is slightly slower at the same group count. Ridge selection costs several times the full model's training, so it repays only after roughly 1,000 test series; `filter` repays after about 25 (50% of groups) or immediately. The full table (75%, 30%, 10%, bootstrap intervals, train-cost ratios) is in that folder's `report.md`.
+
+**Secondary pruning run** (`results/group_pruning_full_drop30_1seed/`: same datasets, 1 seed, drop fraction 0.3): same conclusions, e.g. ridge 50%: -0.38 pp at 0.359 of full-original time; ridge 20%: -1.55 pp at 0.170; break-even about 530-580 series for ridge. It was run first as a faster substitute and is kept as a robustness check on the drop fraction.
 
 **Stratified vs uniform biases** (`results/group_pruning_bias_30ds_10seeds/`: 30 datasets, 10 seeds, full model). Mean accuracy difference stratified minus uniform: **-0.03 pp** (8 wins / 8 ties / 14 losses; Wilcoxon p = 0.35). Seed-to-seed standard deviation was not lower for stratified (0.73 vs 0.65 pp). Only the imbalanced subgroup is nominally significant, and in the wrong direction (-0.10 pp, p = 0.012, unadjusted across several subgroup tests on 9 datasets: exploratory). The original-vs-uniform control (RNG policy only) was also within noise (+0.06 pp, p = 0.29). **Null result on average.**
 
@@ -56,17 +58,17 @@ Findings: test-transform time falls roughly in proportion to groups kept and the
 
 ## Scope of what was run
 
-The runbook's full-size plan was reduced because large datasets make the ridge selection loop slow on this machine (Crop alone took 18-24 min per seed with drop fraction 0.2). Every deviation:
+The runbook's full-size plan was reduced for Phases 7, 8, 9 and 10 because large datasets make the ridge selection loop slow on this machine (the full Phase 6 run took about 9 hours of wall time, Crop alone 18-24 min per seed and ElectricDevices about 45 min per seed). Every deviation or addition:
 
 | Phase | Planned | Run |
 |---|---|---|
-| 6 pruning | all datasets, 3 seeds, drop 0.2 | all 113 usable datasets, **1 seed, drop 0.3** (a first 3-seed run was stopped after 53 cases and is **not used**) |
+| 6 pruning | all datasets, 3 seeds, drop 0.2 | **as planned** (`group_pruning_full/`; stopped once after 53 cases, then resumed to completion with the same settings). Also run: a faster 1-seed, drop-0.3 version (`group_pruning_full_drop30_1seed/`) |
 | 7 stratified study | all datasets, 20 seeds | **30 datasets (fixed rule: 10 imbalanced, 10 small, 10 rest, evenly spaced alphabetically), 10 seeds** |
 | 8 combined | all datasets, 5 seeds, default scorer | **the same 30 datasets, 5 seeds, ridge only, drop 0.3** |
 | 9 energy | 5 datasets | **skipped**: no valid power measurement on this machine |
 | 10 25k features | 10 datasets, reduced Phase 6 | 10 datasets, 1 seed, keep fractions 1.0/0.5/0.2, drop 0.3 |
 
-15 of the 128 archive datasets are skipped by the loader (12 variable-length, 3 with missing values). Consequences: one seed gives no seed-to-seed noise estimate for pruning; dataset-bootstrap intervals describe dataset mix only; drop fraction 0.3 changes which groups survive compared with 0.2; the 30-dataset subset has little statistical power inside its subgroups.
+15 of the 128 archive datasets are skipped by the loader (12 variable-length, 3 with missing values). Consequences: dataset-bootstrap intervals describe dataset mix, not seed noise; the first 53 cases of the primary run were timed in an earlier session than the rest (same machine, same code); drop fraction 0.3 changes which groups survive compared with 0.2; the 30-dataset subset has little statistical power inside its subgroups; the 25k run has one seed.
 
 ## What changes, and what does not
 
@@ -184,7 +186,7 @@ Exact commands, in order, are in [`results/README_RESULTS.md`](./results/README_
 **Verified on real Numba (Python 3.14.7, numba 0.63.1, Windows 11):**
 - `python -B -m unittest discover -s tests`: 64 tests OK, 1 skipped (an ARM64-only compiler check), with `compat_windows` on PYTHONPATH. The 13 new tests pass.
 - `python tools/generate_joint_ppv.py --check`: kernels current.
-- Pruned features equal `full[:, kept]` bit for bit in every row of every run: pilot (300 rows), Phase 6 (2,486), Phase 7 (1,800), Phase 8 (3,600), Phase 10 (100).
+- Pruned features equal `full[:, kept]` bit for bit in every row of every run: pilot (300 rows), Phase 6 primary (7,458), Phase 6 drop-0.3 (2,486), Phase 7 (1,800), Phase 8 (3,600), Phase 10 (100).
 - Keep-all pruned joint transform gives output identical to the existing joint transform and is 0.7% (GunPoint) to 3% (Wafer) slower (`experiments/sanity_keepall.py`).
 - Reproduction against the paper on 109 datasets (above).
 
@@ -192,7 +194,7 @@ Exact commands, in order, are in [`results/README_RESULTS.md`](./results/README_
 - **Energy:** no valid measurement (next section).
 - **SIMD audit test** (`test_small_width_helpers_vectorize_on_audited_runtime`) is specific to ARM64 and was skipped; SIMD behaviour of the sliced-view pooling calls was checked only indirectly through the keep-all timing above.
 - **Bitwise ties:** none were observed, so V3 never triggered.
-- **Seed noise in pruning results** (single seed), and statistical power inside subgroups.
+- **Seed noise** is not separated out of the dataset-bootstrap intervals; there is no significance test of `filter` vs `ridge` (the gap is consistent across keep levels but untested); statistical power inside the 30-dataset subgroups is low.
 - **Memory comparisons** with the published macOS results (C9).
 - **Cross-machine timing:** all timings come from one Windows desktop (AMD Ryzen 9 8940HX, 32 logical CPUs) with `NUMBA_NUM_THREADS=1` but unrestricted BLAS threads in scikit-learn; use ratios, not absolute seconds.
 
