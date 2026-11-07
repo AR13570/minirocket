@@ -174,3 +174,11 @@ Mean over the 10 datasets (joint PPV, from `report.md`):
 | filter 50% | 790 | 14,729 | 88.59 | -0.31 | 0.600 | 34 |
 | filter 20% | 316 | 7,017 | 88.57 | -0.33 | 0.304 | 0 |
 Reading (10 datasets, 1 seed: descriptive only): pruning to 20% of groups kept accuracy at the full-model level here and cut transform time to about 0.18-0.30 of the full model. The full model's joint PPV was **not** faster than original pooling in this sample (ratio 1.006, versus 0.806 over 113 datasets at 10k features in Phase 6); the dataset mix differs, so do not compare the two numbers directly. In the full model, test-time classifier work (predict) is a visible share for the larger datasets (e.g. 0.33 s predict vs 2.2 s transform on Wafer), as the README predicted.
+
+## 14. Phase 11: final assembly
+- `README_GROUP_PRUNING.md` created in the repo root from the supplied document, with the status, results table, scope-of-run table, file table (added `sanity_keepall`, `analyse_bias`, `energy`, `compat_windows`), conflicts (added C14) and the verified / not-verified section rewritten to match what actually ran.
+- `results/README_RESULTS.md` (folder index: command, commit, environment) and `results/environment_freeze.txt` (`pip freeze`, 179 lines; it is the whole user-site Python environment, not a clean venv).
+- Final checks: `python -B -m unittest discover -s tests` -> 64 tests OK (1 skipped, ARM64-only); `python tools/generate_joint_ppv.py --check` -> current; `git diff` of the ten protected files against the baseline commit `8aa4ae2` -> empty.
+- `RUNBOOK_CLAUDE_CODE.md` was not copied into the repo (it is the user's own instruction file).
+- Left untracked on purpose: `results/group_pruning_full/` and `results/group_pruning_full.log` (the stopped, incomplete run; delete or keep as you prefer).
+
