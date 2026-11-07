@@ -93,8 +93,8 @@ Log: `results/group_pruning_full_drop30_1seed.log`.
 - Selection time is lower than with 0.2, so break-even numbers are optimistic relative to the 0.2 setting.
 
 ## 9. Phase 6 results (reduced-scope run, section 8 settings)
-Folder `results/group_pruning_full_drop30_1seed/` (measurements.csv, summary.csv, report.md, metadata.json); command in `RUN_LOG.md`. Finished 2026-11-07, ~1h15 wall time.
-**Scope:** 113 datasets run, 15 skipped automatically by the loader (11 variable-length series: AllGestureWiimoteX/Y/Z, GestureMidAirD1-3, GesturePebbleZ1/Z2, MelbournePedestrian, PLAID, PickupGestureWiimoteZ, ShakeGestureWiimoteZ; 3 with missing values: DodgerLoopDay/Game/Weekend; counted as 15 total in metadata). **1 seed (0), bias strategy `original`, drop fraction 0.3.** No dataset was excluded for memory or time.
+Folder `results/group_pruning_full_drop30_1seed/` (measurements.csv, summary.csv, report.md, metadata.json); command in `RUN_LOG.md`. Finished 2026-11-07, about 1h20 wall time.
+**Scope:** 113 datasets run, 15 skipped automatically by the loader (12 variable-length series: AllGestureWiimoteX/Y/Z, GestureMidAirD1-3, GesturePebbleZ1/Z2, MelbournePedestrian, PLAID, PickupGestureWiimoteZ, ShakeGestureWiimoteZ; 3 with missing values: DodgerLoopDay/Game/Weekend). **1 seed (0), bias strategy `original`, drop fraction 0.3.** No dataset was excluded for memory or time.
 **Exactness:** 2,486 rows, **0** rows where pruned features differ from `full[:, kept]`.
 **Baseline:** unpruned accuracy 86.07% (mean over 113 datasets, single seed). Joint PPV on the full model takes 0.806 of the original transform time.
 
