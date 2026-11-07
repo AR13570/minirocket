@@ -91,3 +91,31 @@ Log: `results/group_pruning_full_drop30_1seed.log`.
 - One seed per dataset, so accuracy and time differences are single-run values; the dataset-bootstrap intervals in `summarise.py` reflect dataset mix only, not seed-to-seed noise.
 - With drop fraction 0.3 the ridge ranking removes groups in bigger steps, which can change which groups survive compared with 0.2. Results are not comparable with the pilot (0.2, 2 seeds) except qualitatively.
 - Selection time is lower than with 0.2, so break-even numbers are optimistic relative to the 0.2 setting.
+
+## 9. Phase 6 results (reduced-scope run, section 8 settings)
+Folder `results/group_pruning_full_drop30_1seed/` (measurements.csv, summary.csv, report.md, metadata.json); command in `RUN_LOG.md`. Finished 2026-11-07, ~1h15 wall time.
+**Scope:** 113 datasets run, 15 skipped automatically by the loader (11 variable-length series: AllGestureWiimoteX/Y/Z, GestureMidAirD1-3, GesturePebbleZ1/Z2, MelbournePedestrian, PLAID, PickupGestureWiimoteZ, ShakeGestureWiimoteZ; 3 with missing values: DodgerLoopDay/Game/Weekend; counted as 15 total in metadata). **1 seed (0), bias strategy `original`, drop fraction 0.3.** No dataset was excluded for memory or time.
+**Exactness:** 2,486 rows, **0** rows where pruned features differ from `full[:, kept]`.
+**Baseline:** unpruned accuracy 86.07% (mean over 113 datasets, single seed). Joint PPV on the full model takes 0.806 of the original transform time.
+
+Mean over datasets (from `report.md`; delta = accuracy change vs unpruned; time ratio = test transform vs unpruned with the same implementation, joint PPV; "vs orig" = pruned joint vs unpruned original):
+| Scorer | Groups kept | Features | Accuracy % | Delta pp | Time ratio (same impl) | Time ratio vs orig | Median break-even (series) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| filter | 75% | 7,952 | 86.10 | +0.03 | 0.811 | 0.654 | 237 |
+| filter | 50% | 5,558 | 85.94 | -0.14 | 0.571 | 0.460 | 23 |
+| filter | 30% | 3,536 | 85.51 | -0.57 | 0.379 | 0.306 | 0 |
+| filter | 20% | 2,457 | 85.20 | -0.88 | 0.285 | 0.230 | 0 |
+| filter | 10% | 1,271 | 84.51 | -1.57 | 0.174 | 0.140 | 0 |
+| ridge | 75% | 7,060 | 85.92 | -0.15 | 0.657 | 0.530 | 656 |
+| ridge | 50% | 4,508 | 85.70 | -0.38 | 0.445 | 0.359 | 530 |
+| ridge | 30% | 2,575 | 85.14 | -0.93 | 0.285 | 0.230 | 594 |
+| ridge | 20% | 1,654 | 84.53 | -1.55 | 0.210 | 0.170 | 578 |
+| ridge | 10% | 776 | 83.72 | -2.35 | 0.138 | 0.112 | 642 |
+Time-ratio 95% intervals (dataset bootstrap) are in `report.md`; all are narrow (e.g. ridge 50% joint 0.424-0.472).
+
+**Reading it (single seed, so descriptive):**
+- Test-transform time falls roughly in proportion to groups kept, and joint PPV's saving carries over to the kept groups (pruned joint vs unpruned original is lower than pruned joint vs unpruned joint at every level).
+- Accuracy cost is small at moderate pruning: about -0.1 to -0.4 pp at 50% of groups, about -1.6 to -2.4 pp at 10%.
+- The cheap `filter` scorer was at least as accurate as `ridge` at every keep level in this run (e.g. 50%: -0.14 vs -0.38 pp), while keeping more features (5,558 vs 4,508), so its time ratio is slightly worse. Do not conclude filter is better without more seeds; one seed and a different feature count make this a weak comparison.
+- Break-even: `ridge` selection costs more than the inference saved for a few hundred series (median 472-656); `filter` repays quickly (23 series at 50%) or immediately (0 means total training cost is already below the unpruned model, because the classifier fit on fewer features saves more than the cheap ranking costs). Training-cost ratio values are in `report.md` (filter 30%: 0.53; ridge 30%: 3.28).
+- Timings come from one Windows desktop; compare ratios, not absolute seconds.

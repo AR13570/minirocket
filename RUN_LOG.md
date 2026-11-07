@@ -33,3 +33,7 @@ Environment: Windows 11, Python 3.14.7, numba 0.63.1, numpy 2.3.5, scikit-learn 
 - First full run (3 seeds, drop 0.2) killed after 53 cases (PID 35032); folder results/group_pruning_full/ is incomplete, not to be used.
 - New run: `NUMBA_NUM_THREADS=1 python -B -m experiments.group_pruning --data ./data/Univariate_ts/ --output-dir ./results/group_pruning_full_drop30_1seed/ --bias-strategies original --scorers ridge filter --drop-fraction 0.3 --seeds 0 > results/group_pruning_full_drop30_1seed.log`
 - Started 2026-11-07 ~00:30. Settings documented in README_CHANGES.md section 8.
+
+## Update (Phase 6 finished)
+- results/group_pruning_full_drop30_1seed/: 113 datasets run, 15 skipped by loader (variable length / missing values), 2486 rows, 0 mismatches. `python -B -m experiments.summarise results/group_pruning_full_drop30_1seed/` OK. Results written to README_CHANGES.md section 9.
+- Not started: Phase 7 (stratified-bias study), 8, 9, 10, 11.
