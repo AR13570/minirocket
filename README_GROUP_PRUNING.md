@@ -89,6 +89,40 @@ Reading:
 
 Same conclusions as the primary run. Ridge break-even is lower here (about 530-650) because a larger drop fraction means fewer elimination rounds, so selection is cheaper.
 
+### Controls: does choosing the groups matter?
+
+`results/controls/` (5,424 rows, 339 cases, 113 datasets, seeds 0-2; `experiments/controls.py`, analysis `experiments/analyse_controls.py`, figure `results/controls/pareto.png`, tables `results/controls/controls_analysis.md`). The reasoning: pruning is faster partly by arithmetic (fewer convolutions), so the real question is whether **choosing** which groups to keep beats naive shrinking. At every keep fraction the run measures, on the same datasets and seeds as the primary run: `random` (same number of groups, chosen at random, with the same bit-for-bit exactness check; 0 failures), `small_ridge` and `small_filter` (a fresh, smaller MiniRocket with the same feature count as the ridge- / filter-pruned model, no selection), and the `full` model re-timed in the same session. The ridge and filter rows are those of the primary run. Each time ratio is relative to the unpruned model timed in the same session as that row.
+
+Accuracy % (mean over 113 datasets; full model 86.08%) and time ratio (joint PPV test transform vs the unpruned model):
+
+| Groups kept | ridge | filter | random groups | smaller (ridge-matched) | smaller (filter-matched) |
+|---:|---|---|---|---|---|
+| 75% | 85.97 (0.672) | 86.07 (0.811) | 85.97 (0.772) | 85.98 (0.789) | 86.00 (0.861) |
+| 50% | 85.81 (0.447) | 86.03 (0.570) | 85.89 (0.541) | 85.82 (0.603) | 86.02 (0.683) |
+| 30% | 85.29 (0.288) | 85.68 (0.384) | 85.51 (0.363) | 85.64 (0.426) | 85.68 (0.515) |
+| 20% | 84.78 (0.212) | 85.29 (0.285) | 85.20 (0.267) | 85.20 (0.294) | 85.43 (0.393) |
+| 10% | 83.85 (0.138) | 84.65 (0.175) | 84.58 (0.175) | 84.47 (0.148) | 84.86 (0.216) |
+
+Feature counts differ between columns (e.g. at 50%: ridge 4,527, filter 5,555, random 5,017); the matched smaller models have the feature count of the pruned model they are compared with.
+
+Paired Wilcoxon tests over 113 datasets (accuracy, A minus B; 20 tests, unadjusted):
+
+| Groups kept | ridge - random | filter - random | ridge - smaller | filter - smaller |
+|---:|---|---|---|---|
+| 75% | +0.00 pp (p=0.27) | +0.09 (0.16) | -0.01 (0.64) | +0.06 (0.11) |
+| 50% | -0.09 (0.75) | +0.14 (0.22) | -0.02 (0.70) | +0.01 (0.86) |
+| 30% | -0.22 (0.32) | +0.17 (0.24) | -0.35 (0.12) | -0.01 (0.68) |
+| 20% | -0.42 (**0.041**) | +0.09 (0.45) | -0.41 (**0.030**) | -0.14 (0.50) |
+| 10% | -0.74 (**0.035**) | +0.06 (0.61) | -0.63 (0.14) | -0.21 (0.36) |
+
+**Findings.**
+1. **Choosing the groups does not improve accuracy.** `filter` is indistinguishable from random groups at every level (differences +0.06 to +0.17 pp, all p > 0.15), and from a smaller fresh model of the same size (all p > 0.1). `ridge` is **not better than random; at heavy pruning it is nominally worse** (-0.42 pp at 20%, -0.74 pp at 10%, p about 0.04). Three of the 20 tests have p < 0.05 where about one is expected by chance, and none survives a Holm correction over the 20, so read this as "ridge selection gives no gain and may overfit at heavy pruning", not as a proven loss.
+2. **The real advantage of group pruning is time, not accuracy.** At equal accuracy a pruned model is faster than a smaller fresh model, because a fresh smaller model spreads its feature budget over almost all groups (at 50% of features: 1,597 groups with 3.5 features each), while pruning keeps about half the groups with 5.7 to 7 features each. Time follows the number of groups (convolutions). Example at 50%: filter-pruned 86.03% at 0.570 versus smaller (filter-matched) 86.02% at 0.683, about 17% less time for the same accuracy. At 20%: 85.29% at 0.285 versus 85.43% at 0.393, about 27% less time for -0.14 pp (not significant).
+3. **A random mask is a free baseline.** Dropping groups at random needs no selection at all (break-even 0 series) and matches the best selected models within 0.1 to 0.2 pp, at similar time. This undercuts `ridge` selection (about 1,000 series to break even) and weakens even `filter`: filter's edge over random is small and not significant.
+4. **Interpretation.** MiniRocket's 10,000 features are highly redundant: which groups remain matters little as long as enough of them do. Pruning therefore works, but mostly as "do less convolution work", not as "find the good features".
+
+Caveats: ridge/filter times are from the primary run's session and random/smaller times from the controls session (each relative to its own full model, so the ratios are comparable but not measured in one process); the 20 tests are unadjusted; accuracy differences between methods at the same group count are confounded by feature count (random keeps more features than ridge but fewer than filter at the same group count).
+
 ### Stratified vs uniform biases
 
 `results/group_pruning_bias_30ds_10seeds/`: 30 datasets, 10 seeds, full model, 1,800 rows. Accuracy difference stratified minus uniform (paired over datasets; details in `bias_analysis.md`):
@@ -151,10 +185,11 @@ Descriptive only (10 datasets, 1 seed): with more features there is more redunda
 
 ### Recommendation
 
-1. Use group pruning with the cheap `filter` scorer at 50% of groups: about 2.2 times faster test transform (0.463 of original) for -0.05 pp (not significant), repaid within about 25 series.
-2. Use `ridge` selection only if you will classify more than roughly 1,000 series per trained model, or at very large feature counts where it lost no accuracy (25k run, indicative).
-3. Expect a 1 to 2 pp loss below 20% of groups.
-4. Skip stratified biases: no benefit shown.
+1. **Group pruning is a speed tool.** Dropping half the groups cuts the test transform to about 0.45-0.57 of the full time (0.36-0.46 vs original pooling) for -0.05 pp (`filter`) to -0.27 pp (`ridge`). Time follows the number of groups kept, because convolutions are skipped.
+2. **Do not pay for ridge selection.** The controls show random groups match it (and beat it at heavy pruning, unadjusted p about 0.04), and it needs about 1,000 test series to break even. Use `filter` as a cheap, safe default, or random groups as a zero-cost baseline; `filter` is not significantly better than random.
+3. **Prefer pruning over fitting a smaller MiniRocket** when time matters: at equal accuracy it is 17-27% faster in the transform, because a small fresh model keeps nearly all groups.
+4. Expect a 1 to 2 pp loss below 20% of groups.
+5. Skip stratified biases: no benefit shown.
 
 ## Scope of what was run
 
@@ -165,6 +200,7 @@ Descriptive only (10 datasets, 1 seed): with more features there is more redunda
 | 8 combined | all datasets, 5 seeds, default scorer | **same 30 datasets, 5 seeds, `ridge` only, drop 0.3** (the all-dataset version would take about 10 h) |
 | 9 energy | 5 datasets | **skipped**: no valid power measurement on this machine |
 | 10 25k features | 10 datasets, reduced Phase 6 | 10 datasets, 1 seed, keep fractions 1.0/0.5/0.2, drop 0.3 |
+| added: controls | not in the runbook | random group masks and smaller fresh models, 113 datasets, 3 seeds (`controls/`, complete) |
 
 15 of the 128 archive datasets are skipped by the loader: 12 with variable-length series (AllGestureWiimoteX/Y/Z, GestureMidAirD1-3, GesturePebbleZ1/Z2, MelbournePedestrian, PLAID, PickupGestureWiimoteZ, ShakeGestureWiimoteZ) and 3 with missing values (DodgerLoopDay/Game/Weekend). No dataset was excluded for memory or time; the run covers 113.
 
@@ -187,6 +223,8 @@ Consequences: dataset-bootstrap intervals describe dataset mix, not seed noise; 
 | [`experiments/sanity_keepall.py`](./experiments/sanity_keepall.py) | Scratch | Keep-all pruned transform vs the existing joint transform: identical output; ratios 1.007 (GunPoint), 1.030 (Wafer), within the 10% limit |
 | [`experiments/analyse_bias.py`](./experiments/analyse_bias.py) | Scratch | Stratified-vs-uniform analysis: per-dataset mean/std, Wilcoxon, subgroups, `--by-keep-fraction` |
 | [`experiments/final_analysis.py`](./experiments/final_analysis.py) | Scratch | Pruned-vs-full and `filter`-vs-`ridge` Wilcoxon tests; Holm-corrected stratification tests |
+| [`experiments/controls.py`](./experiments/controls.py) | Scratch | Random-group masks and smaller fresh MiniRocket models matched to the primary run |
+| [`experiments/analyse_controls.py`](./experiments/analyse_controls.py) | Scratch | Paired tests against the controls; accuracy-vs-time figure |
 | [`experiments/energy.py`](./experiments/energy.py) | Scratch | CodeCarbon CPU energy minus idle (written and tested; no valid results here, see [Energy](#energy-not-measured)) |
 | [`compat_windows/`](./compat_windows) | Scratch | Windows stand-ins for `fcntl`, `resource`, `os.sysconf` (see [Windows compatibility](#windows-compatibility)) |
 | `README_GROUP_PRUNING.md` (this file), `PROJECT_EXPLAINED.md` | Adapted / Scratch | The only two documents for this work |
@@ -272,6 +310,7 @@ Use `NUMBA_NUM_THREADS=1`, a quiet machine, and the same machine for every timin
 | `group_pruning_combined_30ds_5seeds/` | `--datasets DS30 --bias-strategies uniform stratified --seeds 0 1 2 3 4 --drop-fraction 0.3 --scorers ridge`, then `experiments.analyse_bias <folder> --by-keep-fraction` |
 | `group_pruning_25k/` | `--datasets GunPoint ECG200 Beef Computers Wafer ECG5000 FacesUCR Trace Yoga EthanolLevel --bias-strategies original --scorers ridge filter --keep-fractions 1.0 0.5 0.2 --seeds 0 --drop-fraction 0.3 --feature-count 25000` |
 | final tests | `python -B -m experiments.final_analysis` (reads the committed CSVs; no timing) |
+| `controls/` | `NUMBA_NUM_THREADS=1 python -B -m experiments.controls --data ./data/Univariate_ts/ --output-dir results/controls` (seeds 0 1 2, keep 0.75-0.1; needs `group_pruning_full/`), then `python -B -m experiments.analyse_controls` |
 
 ## Experiment grid and accounting
 
@@ -351,6 +390,7 @@ Result: `python -B -m unittest discover -s tests` gives 64 tests OK, 1 skipped (
 
 ## Limitations
 
+- The controls show that selection does not beat random groups for accuracy (see Controls); their time comparison with a smaller fresh model spans two sessions (each ratio relative to its own full model).
 - One machine, one OS. The first 53 of 339 primary cases were timed in an earlier session than the other 286 (same machine and code, not a controlled comparison).
 - Dataset-bootstrap intervals describe dataset mix, not seed noise; with 3 seeds, seed noise is only partly averaged out.
 - The 30-dataset subgroups (10 datasets each) have little power; only `examples_per_group = 1` was tried.
@@ -376,7 +416,8 @@ Branch `group-pruning`; nothing pushed. The folder was not a git repository: `gi
 | `87c461b` | Phase 11: final README, results index, environment freeze |
 | `2eacc28` | Full Phase 6 (113 datasets, 3 seeds, drop 0.2) completed by resuming; docs updated |
 | `7921931` | `final_analysis.py`, filter-vs-ridge and multiplicity tests |
-| next | Documentation consolidated into two files |
+| `6109db1` | Documentation consolidated into two files |
+| next | Controls run (random masks, smaller models), analysis and figure |
 
 Phase by phase:
 - **Phase 1/2.** Kernels current; 13/13 new tests pass under real Numba with no fixes needed (22 s). The existing suite initially failed on Windows (see above).
