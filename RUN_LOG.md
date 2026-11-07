@@ -130,3 +130,4 @@ nohup .venv/bin/python -B -W ignore::UserWarning -m experiments.group_pruning \
 - Phases 6 and 7 still use all datasets. Phase 7 is estimated at ~27 h, mostly ElectricDevices (~10 h) and Crop (~5 h); this is not a restriction from the user, so if its time becomes a problem, report before excluding anything.
 - Checkpoint 2026-11-06T23:24Z: 42 cases done, 0 mismatches so far; run alive.
 - Checkpoint 2026-11-06T23:28Z: 51 cases done, 0 mismatches so far; run alive.
+- 2026-11-07T01:07Z: run process not alive at 51 cases (container restart, then a resume attempt was interrupted by the user). Not restarted; waiting for the user's instruction. CSV intact (51 cases, 0 mismatches).
