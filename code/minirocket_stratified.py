@@ -10,13 +10,13 @@ index table built in Python:
                           (almost) the same number of groups; the example is drawn uniformly
                           inside the class.
 
-``examples_per_group=m`` pools the responses of m examples before taking quantiles (fit cost
+(examples_per_group=m) pools the responses of m examples before taking quantiles (fit cost
 grows about m-fold). Only the biases differ from the original fit: dilations, features per
-dilation and the quantile levels come from the original ``_fit_dilations`` / ``_quantiles``,
-so the returned tuple is a drop-in ``parameters`` for every transform in this repo.
+dilation and the quantile levels come from the original ((_fit_dilations) / (_quantiles)),
+so the returned tuple is a drop-in (parameters) for every transform in this repo.
 
 Why 'uniform' exists: the original uses Numba's RNG inside the jitted function, this module uses
-a NumPy Generator seeded by ``random_state``. Comparing 'stratified' against 'uniform' (same
+a NumPy Generator seeded by (random_state). Comparing 'stratified' against 'uniform' (same
 code path, same seed policy) isolates the effect of stratification from the RNG change.
 """
 from itertools import combinations
@@ -32,9 +32,8 @@ _INDICES = np.array(list(combinations(range(9), 3)), dtype=np.int32)
 
 
 def draw_example_table(y, num_groups, examples_per_group=1, strategy='stratified', random_state=0):
-    """Return int32 ``[num_groups, examples_per_group]`` of training-example indices.
-
-    Row ``g = dilation_index * 84 + kernel_index`` is the group's example(s).
+    """Return int32 [num_groups, examples_per_group] of training-example indices.
+    Row g = dilation_index * 84 + kernel_index is the group's example(s).
     """
     y = np.asarray(y)
     if y.ndim != 1 or len(y) == 0:
@@ -82,7 +81,6 @@ def _fit_biases_from_table(X, dilations, num_features_per_dilation, quantiles, e
         for kernel_index in range(num_kernels):
 
             feature_index_end = feature_index_start + num_features_this_dilation
-
             pooled = np.zeros(per_group * input_length, dtype=np.float32)
 
             for slot in range(per_group):

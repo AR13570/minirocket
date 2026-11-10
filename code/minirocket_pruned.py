@@ -1,23 +1,5 @@
-"""Group-level pruning for MiniRocket.
+#Group-level pruning for MiniRocket.
 
-A *group* is the block of consecutive features that share one (dilation, kernel)
-pair: ``num_features_per_dilation[j]`` thresholds applied to the response of kernel
-``k`` at dilation ``j``. Feature order in the original transform is dilation-major,
-kernel-minor, so group ``(j, k)`` occupies one contiguous slice of the feature vector.
-
-Pruning is expressed as a boolean mask ``keep`` of shape ``(len(dilations), 84)``.
-Dropping a group skips its convolution *and* its thresholds; the surviving columns
-are bit-for-bit the columns of the unpruned transform (``full[:, kept_columns]``).
-
-Rules that keep that guarantee (see README_GROUP_PRUNING.md):
-  * fit ONCE on the full layout and keep the full ``biases`` array. Biases come from
-    ``_quantiles(global feature index)``, so they must not be refitted for a smaller layout.
-  * never renumber dilation or kernel indices. Padding alternates with
-    ``(dilation_index + kernel_index) % 2``; renumbering would change which groups pad.
-
-Convolution arithmetic and pooling follow code/minirocket.py and
-code/minirocket_joint_ppv_simd.py. Only the group loop is masked.
-"""
 from itertools import combinations
 
 import numpy as np
@@ -69,7 +51,7 @@ def pruned_width(parameters, keep):
     return int(group_layout(parameters)[0][keep].sum())
 
 
-# -- transforms ----------------------------------------------------------------------
+# transforms
 
 @njit(cache=True, fastmath=True, parallel=True)
 def _transform_joint(X, parameters, keep, width):
@@ -237,11 +219,7 @@ def _transform_original_style(X, parameters, keep, width):
 
 
 def transform(X, parameters, keep, implementation='joint'):
-    """Transform with only the kept groups. ``implementation`` is 'joint' or 'original'.
-
-    Output columns are ``full_transform[:, kept_columns(parameters, keep)]``. Nothing in
-    ``parameters`` is modified.
-    """
+    # Transform with only the kept groups. 
     if implementation not in ('joint', 'original'):
         raise ValueError("implementation must be 'joint' or 'original'")
     X = validate_input(X, 2, allow_empty=True)
@@ -255,7 +233,7 @@ def transform(X, parameters, keep, implementation='joint'):
     return _transform_original_style(X, parameters, keep, width)
 
 
-# -- ranking and pruning -------------------------------------------------------------
+# ranking and pruning 
 
 def _default_classifier(n_train):
     from sklearn.linear_model import RidgeClassifierCV
@@ -266,13 +244,6 @@ def _default_classifier(n_train):
 
 
 def group_scores(coef, parameters, keep):
-    """Per-group score ``||W_g||_F / sqrt(p_g)``; NaN for pruned groups.
-
-    ``coef`` must come from a classifier fitted on STANDARDISED features of the kept
-    columns (scaler first, so coefficients are comparable across features). Dividing by
-    sqrt(group size) mirrors the sqrt(p_g) weights of group lasso, so large-N dilations
-    do not win just by having more features.
-    """
     keep = validate_keep(parameters, keep)
     coef = np.atleast_2d(np.asarray(coef, dtype=np.float64))
     sizes, _ = group_layout(parameters)
@@ -307,13 +278,13 @@ def filter_group_scores(features, y, parameters, keep):
 
 def prune_groups(features, y, parameters, keep_fraction, scorer='ridge',
                  drop_fraction=0.2, classifier_factory=None, keep=None):
-    """Select groups from FULL training features (``transform(X_train, p, keep_all(p))``).
+    """Select groups from FULL training features (transform(X_train, p, keep_all(p))).
 
     scorer='ridge'  : iterative backward elimination. Each round refits the classifier on
-                      the surviving columns and drops the lowest ``drop_fraction`` of groups.
+                      the surviving columns and drops the lowest drop_fraction of groups.
     scorer='filter' : one-shot ANOVA-F ranking (no classifier fits).
 
-    Uses TRAIN data only. Returns ``(keep, history)``; ``history`` has one dict per round.
+    Uses TRAIN data only. Returns (keep, history); history -> has one dict per round.
     """
     features = np.asarray(features)
     keep = keep_all(parameters) if keep is None else validate_keep(parameters, keep).copy()
