@@ -39,7 +39,7 @@ All numbers are copied from files under `results/` (never estimated). Timing: on
 
 Mean paired difference +0.014 pp, median 0.000. Two datasets differ by more than 2 pp (BeetleFly +3.3, Computers +2.5) and none by more than 2 of the paper's own standard deviations. Wilcoxon p = 0.582: no systematic difference. The paper's 30-resample mean (87.24%) uses a different protocol and must not be compared with a single split. The authors' CSVs were fetched from github.com/angus924/minirocket (`results/`).
 
-**Exactness.** Pruned features equal `full[:, kept]` bit for bit in **all 15,744 measured rows** (pilot 300, primary 7,458, drop-0.3 2,486, bias 1,800, combined 3,600, 25k 100; checked from the CSVs). The 13 new tests pass.
+**Exactness.** Pruned features equal `full[:, kept]` bit for bit in **all 29,304 measured rows** (pilot 300, primary 7,458, drop-0.3 2,486, bias 1,800, bias all-113 13,560, combined 3,600, 25k 100; checked from the CSVs; the 1,800 rows shared by the two bias runs are counted in both). The 13 new tests pass.
 
 ### Group pruning, primary run
 
@@ -125,16 +125,18 @@ Caveats: ridge/filter times are from the primary run's session and random/smalle
 
 ### Stratified vs uniform biases
 
-`results/group_pruning_bias_30ds_10seeds/`: 30 datasets, 10 seeds, full model, 1,800 rows. Accuracy difference stratified minus uniform (paired over datasets; details in `bias_analysis.md`):
+`results/group_pruning_bias_all_20seeds/`: **all 113 datasets, 20 seeds**, full model, 3 strategies (original, uniform, stratified): 6,780 cases, 13,560 rows. Accuracy difference stratified minus uniform (mean over seeds first, then paired over datasets; 95% interval from a dataset bootstrap, 10,000 resamples; details in `bias_analysis.md`):
 
-| Subgroup | Datasets | Mean diff pp | Wins/ties/losses | Wilcoxon p (n non-zero) | Seed std, stratified vs uniform (pp) |
-|---|---:|---:|---|---|---|
-| all | 30 | -0.032 | 8/8/14 | 0.353 (22) | 0.727 vs 0.652 |
-| imbalanced | 10 | -0.097 | 1/1/8 | 0.012 (9) | 0.619 vs 0.541 |
-| small | 10 | -0.039 | 2/5/3 | 0.812 (5) | 0.826 vs 0.787 |
-| rest | 10 | +0.041 | 5/2/3 | 0.461 (8) | 0.736 vs 0.627 |
+| Subgroup | Datasets | Mean diff pp | 95% interval pp | Wins/ties/losses | Wilcoxon p (n non-zero) | Seed std, stratified vs uniform (pp) |
+|---|---:|---:|---|---|---|---|
+| all | 113 | -0.002 | -0.044 to +0.043 | 43/23/47 | 0.377 (90) | 0.503 vs 0.485 |
+| imbalanced | 57 | -0.035 | -0.086 to +0.018 | 17/9/31 | 0.054 (48) | 0.474 vs 0.483 |
+| small | 26 | +0.060 | -0.037 to +0.178 | 7/11/8 | 0.934 (15) | 0.441 vs 0.444 |
+| rest | 30 | +0.007 | -0.076 to +0.082 | 19/3/8 | 0.400 (27) | 0.610 vs 0.525 |
 
-Control, original minus uniform (RNG policy only): +0.061 pp, p = 0.290. **The average effect is null**, and stratified did not lower the seed-to-seed spread. The one nominal hit (imbalanced, p = 0.012) is in the wrong direction and unadjusted.
+Control, original minus uniform (RNG policy only): +0.030 pp, 95% interval -0.007 to +0.072, p = 0.182. **The average effect is null.** Mean accuracy is 86.10% for both stratified and uniform; the median dataset differs by 0.08 pp in absolute value, 32 of 113 datasets differ by 0.2 pp or more and 7 by 0.5 pp or more, in both directions (largest: BeetleFly +1.0, Rock +0.70, DistalPhalanxOutlineCorrect -0.53, Computers -0.50). Stratified did not lower the seed-to-seed spread overall (0.503 vs 0.485 pp). In the `rest` group its spread was higher in 18 of 30 datasets (p = 0.032 unadjusted). Across the 16 tests in this study (2 comparisons x 4 subgroups x accuracy and spread) one raw p-value is below 0.05 (0.8 expected by chance), and **none survives Holm** (smallest adjusted p = 0.51).
+
+An earlier, smaller run of the same study (`group_pruning_bias_30ds_10seeds/`: 30 datasets, 10 seeds, 1,800 rows) had shown stratified worse on the 10 `imbalanced` datasets (-0.097 pp, 1/1/8, p = 0.012, unadjusted). **That hit did not replicate**: on those same 10 datasets with 20 seeds the difference is -0.066 pp (p = 0.25), and on all 57 imbalanced datasets it is -0.035 pp (p = 0.054, interval includes 0). The 900 cases that both runs share (30 datasets, seeds 0 to 9) match in accuracy and in the SHA-256 of the test features in all 1,800 rows, so the two runs agree wherever they overlap.
 
 ### Combined: stratified/uniform x pruning
 
@@ -189,14 +191,14 @@ Descriptive only (10 datasets, 1 seed): with more features there is more redunda
 2. **Do not pay for ridge selection.** The controls show random groups match it (and beat it at heavy pruning, unadjusted p about 0.04), and it needs about 1,000 test series to break even. Use `filter` as a cheap, safe default, or random groups as a zero-cost baseline; `filter` is not significantly better than random.
 3. **Prefer pruning over fitting a smaller MiniRocket** when time matters: at equal accuracy it is 17-27% faster in the transform, because a small fresh model keeps nearly all groups.
 4. Expect a 1 to 2 pp loss below 20% of groups.
-5. Skip stratified biases: no benefit shown.
+5. Skip stratified biases: no benefit over all 113 datasets and 20 seeds (mean -0.002 pp against uniform, 95% interval -0.04 to +0.04 pp), and it does not reduce seed-to-seed variation. The study can rule out an average effect larger than about 0.05 pp; it cannot rule out small effects on individual datasets.
 
 ## Scope of what was run
 
 | Phase | Planned | Run |
 |---|---|---|
 | 6 pruning | all datasets, 3 seeds, drop 0.2 | **as planned** (`group_pruning_full/`; stopped once after 53 cases because it was slow, then resumed to completion with the same settings and `--resume`; about 9 h wall time in total, Crop 18-24 min and ElectricDevices about 45 min per seed). Also run: a faster 1-seed, drop-0.3 version (`group_pruning_full_drop30_1seed/`) |
-| 7 stratified study | all datasets, 20 seeds | **30 datasets, 10 seeds** (rule below) |
+| 7 stratified study | all datasets, 20 seeds | **as planned**: 113 datasets, 20 seeds (`group_pruning_bias_all_20seeds/`, 13,560 rows, about 9 h wall time; stopped once and resumed with `--resume`). An earlier 30-dataset, 10-seed version (`group_pruning_bias_30ds_10seeds/`) was run first as a cheaper check; the two agree on all 900 shared cases |
 | 8 combined | all datasets, 5 seeds, default scorer | **same 30 datasets, 5 seeds, `ridge` only, drop 0.3** (the all-dataset version would take about 10 h) |
 | 9 energy | 5 datasets | **skipped**: no valid power measurement on this machine |
 | 10 25k features | 10 datasets, reduced Phase 6 | 10 datasets, 1 seed, keep fractions 1.0/0.5/0.2, drop 0.3 |
@@ -204,9 +206,9 @@ Descriptive only (10 datasets, 1 seed): with more features there is more redunda
 
 15 of the 128 archive datasets are skipped by the loader: 12 with variable-length series (AllGestureWiimoteX/Y/Z, GestureMidAirD1-3, GesturePebbleZ1/Z2, MelbournePedestrian, PLAID, PickupGestureWiimoteZ, ShakeGestureWiimoteZ) and 3 with missing values (DodgerLoopDay/Game/Weekend). No dataset was excluded for memory or time; the run covers 113.
 
-**30-dataset subset rule** (fixed before running, not hand-picked): all 113 usable datasets were classed as *imbalanced* (smallest TRAIN class share < 20%: 57 datasets; this also catches balanced datasets with more than 5 classes), *small* (< 100 TRAIN series, not imbalanced: 26) or *rest* (30); within each class, 10 evenly spaced in alphabetical order. The list is in `results/bias_study_subset.csv`; dataset sizes and class shares are in `results/dataset_stats.csv` (generated once from the archive by a throwaway script that was not kept).
+**30-dataset subset rule** (used by the earlier 30-dataset bias run and by the combined run; fixed before running, not hand-picked): all 113 usable datasets were classed as *imbalanced* (smallest TRAIN class share < 20%: 57 datasets; this also catches balanced datasets with more than 5 classes), *small* (< 100 TRAIN series, not imbalanced: 26) or *rest* (30); within each class, 10 evenly spaced in alphabetical order. The list is in `results/bias_study_subset.csv`; the same rule applied to all 113 datasets (57 / 26 / 30, matching every label in the subset file) is in `results/bias_study_groups_all113.csv` and is what the all-dataset stratified analysis uses for its subgroups; dataset sizes and class shares are in `results/dataset_stats.csv` (generated once from the archive by a throwaway script that was not kept).
 
-Consequences: dataset-bootstrap intervals describe dataset mix, not seed noise; the first 53 cases of the primary run were timed in an earlier session than the other 286 (same machine and code); drop 0.3 changes which groups survive compared with 0.2; the 30-dataset subgroups have little power; the 25k run and drop-0.3 run have one seed.
+Consequences: dataset-bootstrap intervals describe dataset mix, not seed noise; the first 53 cases of the primary run were timed in an earlier session than the other 286 (same machine and code); drop 0.3 changes which groups survive compared with 0.2; the combined run's 30-dataset subgroups have little power (the stratified study now covers all 113 datasets); the 25k run and drop-0.3 run have one seed.
 
 ## What changed, file by file
 
@@ -307,6 +309,7 @@ Use `NUMBA_NUM_THREADS=1`, a quiet machine, and the same machine for every timin
 | `group_pruning_full/` | `--bias-strategies original --scorers ridge filter` (seeds 0 1 2, drop 0.2 default); the second session added `--resume` |
 | `group_pruning_full_drop30_1seed/` | `--bias-strategies original --scorers ridge filter --drop-fraction 0.3 --seeds 0` |
 | `group_pruning_bias_30ds_10seeds/` | `--datasets DS30 --bias-strategies original uniform stratified --keep-fractions 1.0 --seeds 0 1 2 3 4 5 6 7 8 9`, then `python -B -m experiments.analyse_bias <folder>` |
+| `group_pruning_bias_all_20seeds/` | `--bias-strategies original uniform stratified --keep-fractions 1.0 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19` (no `--datasets`; stopped once and resumed with `--resume`), then `python -B -m experiments.analyse_bias <folder> --subsets results/bias_study_groups_all113.csv` |
 | `group_pruning_combined_30ds_5seeds/` | `--datasets DS30 --bias-strategies uniform stratified --seeds 0 1 2 3 4 --drop-fraction 0.3 --scorers ridge`, then `experiments.analyse_bias <folder> --by-keep-fraction` |
 | `group_pruning_25k/` | `--datasets GunPoint ECG200 Beef Computers Wafer ECG5000 FacesUCR Trace Yoga EthanolLevel --bias-strategies original --scorers ridge filter --keep-fractions 1.0 0.5 0.2 --seeds 0 --drop-fraction 0.3 --feature-count 25000` |
 | final tests | `python -B -m experiments.final_analysis` (reads the committed CSVs; no timing) |
@@ -372,7 +375,7 @@ Result: `python -B -m unittest discover -s tests` gives 64 tests OK, 1 skipped (
 **Verified on real Numba (Python 3.14.7, numba 0.63.1, Windows 11):**
 - `python -B -m unittest discover -s tests`: 64 tests OK, 1 skipped, with `compat_windows` on PYTHONPATH. The 13 new tests pass.
 - `python tools/generate_joint_ppv.py --check`: kernels current.
-- Pruned features equal `full[:, kept]` bit for bit in all 15,744 rows of every run.
+- Pruned features equal `full[:, kept]` bit for bit in all 29,304 rows of every run.
 - Keep-all pruned joint transform gives output identical to the existing joint transform and is 0.7% (GunPoint) to 3% (Wafer) slower.
 - Reproduction against the paper on 109 datasets.
 - A `git diff` of the ten protected files against baseline `8aa4ae2` is empty.
@@ -393,7 +396,7 @@ Result: `python -B -m unittest discover -s tests` gives 64 tests OK, 1 skipped (
 - The controls show that selection does not beat random groups for accuracy (see Controls); their time comparison with a smaller fresh model spans two sessions (each ratio relative to its own full model).
 - One machine, one OS. The first 53 of 339 primary cases were timed in an earlier session than the other 286 (same machine and code, not a controlled comparison).
 - Dataset-bootstrap intervals describe dataset mix, not seed noise; with 3 seeds, seed noise is only partly averaged out.
-- The 30-dataset subgroups (10 datasets each) have little power; only `examples_per_group = 1` was tried.
+- The combined run's 30-dataset subgroups (10 datasets each) have little power. The stratified study covers all 113 datasets with 20 seeds, but it measures average effects: it cannot rule out small effects on single datasets. Only `examples_per_group = 1` was tried.
 - The 25k run has 10 datasets and 1 seed; the drop-0.3 run has 1 seed.
 - Most p-values are unadjusted (only the multiplicity table is corrected).
 - sklearn "Features ... are constant" warnings from the ANOVA scorer fill some logs; they are harmless (`filter_group_scores` sets those F values to 0).
@@ -425,12 +428,12 @@ Phase by phase:
 - **Phase 4.** Paper vs ours on 109 datasets: 85.67% vs 85.69%, p = 0.582.
 - **Phase 5.** Pilot, 300 rows, 0 mismatches. `--bias-strategies` was left at its default, so all three strategies ran (the runbook command did not restrict it).
 - **Phase 6.** A first run (all datasets, 3 seeds, drop 0.2) started 2026-11-06 23:33 and was stopped after 53 of 339 cases because large datasets are slow (ridge selection refits a 7,200 x ~10,000 matrix every round). At the user's request a faster substitute (1 seed, drop 0.3, new folder) was run on 2026-11-07 (about 1 h 20 min). Later the first run was resumed with the identical command plus `--resume` and completed: 339 cases, 7,458 rows, 0 mismatches, 0 errors.
-- **Phase 7.** 900 cases, 1,800 rows, 0 mismatches.
+- **Phase 7.** First a 30-dataset, 10-seed run: 900 cases, 1,800 rows, 0 mismatches. It was then extended to the planned scope: all 113 datasets, 20 seeds, 6,780 cases, 13,560 rows, 0 mismatches (`equal_to_full_columns` true in every row; every case has exactly 2 rows). Started 2026-11-10 02:27, stopped once at 6,342 cases and resumed with `--resume` on the same command (about 9 h in all). The 900 cases shared with the earlier run are identical in accuracy and test-feature hash. Result: no average effect (see Stratified vs uniform biases).
 - **Phase 8.** 300 cases, 3,600 rows, 0 mismatches.
 - **Phase 9.** Skipped (see Energy).
 - **Phase 10.** 100 rows, 0 mismatches.
 - **Phase 11 and after.** Final assembly; later `final_analysis.py` showed that the earlier wording "`filter` is more accurate than `ridge` at every level" was only a same-sign pattern (significant only at 10%), and the combined run's nominal "10% keep" hint does not survive multiplicity correction; both statements were corrected here.
-- The runbook (`RUNBOOK_CLAUDE_CODE.md`) was not copied into the repo (it is the user's own instruction file). It asked for a `RUN_LOG.md`; at the user's later request that log and the other change documents were merged into this file.
+- The run instructions file was not copied into the repo. It asked for a `RUN_LOG.md`; at the user's later request that log and the other change documents were merged into this file.
 
 ## Prior work and what is new here
 
