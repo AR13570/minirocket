@@ -1,0 +1,61 @@
+{
+  "datasets": [
+    "GunPoint",
+    "ECG200",
+    "Coffee",
+    "Beef",
+    "Wine",
+    "Lightning7",
+    "ItalyPowerDemand",
+    "ArrowHead",
+    "CBF",
+    "FaceFour"
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "methods": [
+    {
+      "name": "original_10k",
+      "kind": "original",
+      "num_features": 10000,
+      "description": "Original MiniRocket transform, PPV only (~10k features)"
+    },
+    {
+      "name": "arnav_joint_10k",
+      "kind": "arnav",
+      "num_features": 10000,
+      "description": "Arnav's joint PPV transform (same features as original, faster)"
+    },
+    {
+      "name": "multipool_10k",
+      "kind": "multipool",
+      "num_features": 2500,
+      "use_difference": false,
+      "description": "My 4 pooling features on the raw series (~10k features)"
+    },
+    {
+      "name": "multipool_diff_10k",
+      "kind": "multipool",
+      "num_features": 1250,
+      "use_difference": true,
+      "description": "My 4 pooling features on raw + difference series (~10k features)"
+    },
+    {
+      "name": "multipool_diff_50k",
+      "kind": "multipool",
+      "num_features": 6250,
+      "use_difference": true,
+      "description": "My 4 pooling features on raw + difference series (~50k features, MultiRocket size)"
+    }
+  ],
+  "threads": 10,
+  "python": "3.14.6",
+  "numba": "0.63.1",
+  "numpy": "2.3.5",
+  "machine": "arm64",
+  "system": "Darwin",
+  "date": "2026-11-07T16:58:34"
+}

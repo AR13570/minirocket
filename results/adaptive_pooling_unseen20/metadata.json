@@ -1,0 +1,56 @@
+{
+  "datasets": [
+    "SyntheticControl",
+    "TwoLeadECG",
+    "MoteStrain",
+    "SonyAIBORobotSurface1",
+    "SonyAIBORobotSurface2",
+    "Plane",
+    "Trace",
+    "OliveOil",
+    "Meat",
+    "Ham",
+    "Herring",
+    "Car",
+    "DistalPhalanxOutlineCorrect",
+    "MiddlePhalanxTW",
+    "Symbols",
+    "ToeSegmentation1",
+    "ShapeletSim",
+    "DiatomSizeReduction",
+    "BeetleFly",
+    "Fish"
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "methods": [
+    {
+      "name": "original_10k",
+      "kind": "original",
+      "num_features": 10000,
+      "description": "Original MiniRocket transform, PPV only (~10k features)"
+    },
+    {
+      "name": "arnav_joint_10k",
+      "kind": "arnav",
+      "num_features": 10000,
+      "description": "Arnav's joint PPV transform (same features as original, faster)"
+    },
+    {
+      "name": "adaptive_10k",
+      "kind": "adaptive",
+      "num_features": 10000,
+      "description": "FINAL MODEL: the original ~10k features, plus MPV only when cross-validation on the TRAINING set says it helps (adaptive_pooling.py)"
+    }
+  ],
+  "threads": 10,
+  "python": "3.14.6",
+  "numba": "0.63.1",
+  "numpy": "2.3.5",
+  "machine": "arm64",
+  "system": "Darwin",
+  "date": "2026-11-09T22:45:10"
+}
