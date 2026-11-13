@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniRocket Explorer</title>
+<meta name="description" content="Adaptive multi-pooling, exact explanations and early classification for MiniRocket time-series classification.">
+<!-- Author: Shreyas Shinde (Student ID 26104692). Static page: open it in a browser, no server needed. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Tailwind CSS v4 (browser build, pinned version) -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+<style type="text/tailwindcss">
+  /* ---- Design tokens (MiniRocket palette) ---- */
+  @theme {
+    --color-void: #09090B;      /* page background */
+    --color-surface: #18181B;   /* cards and data containers */
+    --color-raised: #27272A;    /* dropdowns, modals, hover states */
+    --color-line: #3F3F46;      /* 1px borders and dividers */
+    --color-ink: #FAFAFA;       /* primary text */
+    --color-muted: #A1A1AA;     /* secondary text, axis labels */
+    --color-rocket: #FF5C00;    /* primary accent: CTAs, active tabs, multi-pooling */
+    --color-ai: #8B5CF6;        /* explainability */
+    --color-early: #10B981;     /* early classification, success, positive metrics */
+    --color-heat: #EC4899;      /* heat-map mid-hot stop */
+    --font-sans: "Inter", "Geist", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  }
+  @layer base {
+    html { scroll-behavior: smooth; }
+    body { @apply bg-void text-ink font-sans antialiased; }
+    :focus-visible { outline: 2px solid var(--color-rocket); outline-offset: 2px; border-radius: 4px; }
+  }
+</style>
+<style>
+  /* chart text and the one load animation (plain CSS: used inside SVG) */
+  .axis text { fill: #A1A1AA; font: 500 11px "JetBrains Mono", ui-monospace, monospace; }
+  .axis line, .grid line { stroke: #3F3F46; stroke-width: 1; }
+  .draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.6s ease-out 0.2s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .draw { animation: none; stroke-dashoffset: 0; } }
+  .tip { pointer-events: none; }
+</style>
+</head>
+
+<body>
+<a href="#dashboard" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-raised px-3 py-2 rounded-md z-50">Skip to dashboard</a>
+
+<!-- ================= Navigation ================= -->
+<header class="sticky top-0 z-40 bg-void/90 backdrop-blur border-b border-line">
+  <nav class="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2 font-semibold tracking-tight">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15 L7 9 L11 13 L15 5 L21 11" fill="none" stroke="#FF5C00" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      MiniRocket Explorer
+    </a>
+    <div class="hidden md:flex items-center gap-7 text-sm text-muted">
+      <a href="#features" class="hover:text-ink">Features</a>
+      <a href="#dashboard" class="hover:text-ink">Dashboard</a>
+      <a href="#method" class="hover:text-ink">Method</a>
+    </div>
+    <a href="#dashboard" class="text-sm font-medium bg-rocket text-void px-3.5 py-1.5 rounded-md hover:bg-rocket/90">Open dashboard</a>
+  </nav>
+</header>
+
+<main id="top">
+<!-- ================= Hero ================= -->
+<section class="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-16">
+  <div class="max-w-3xl">
+    <h1 class="text-4xl sm:text-6xl font-semibold tracking-[-0.03em] leading-[1.05]">Classify time series early, and see why.</h1>
+    <p class="mt-6 text-lg text-muted max-w-2xl leading-relaxed">MiniRocket turns a series into about 10,000 pattern features in milliseconds. This project adds adaptive multi-pooling, exact explanations for every time step, and decisions before the series has finished.</p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#dashboard" class="bg-rocket text-void font-medium px-5 py-2.5 rounded-md hover:bg-rocket/90">Open the dashboard</a>
+      <a href="#features" class="border border-line text-ink font-medium px-5 py-2.5 rounded-md hover:bg-raised">See how it works</a>
+    </div>
+  </div>
+
+  <!-- Hero chart: real GunPoint test series over its evidence heat map -->
+  <figure class="mt-14 bg-surface border border-line rounded-xl">
+    <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
+      <div>
+        <p class="font-medium">GunPoint, test series 0</p>
+        <p class="text-sm text-muted">Hand movement of someone drawing a gun. Predicted <span class="font-mono text-ink">Gun</span>, correct.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:flex items-center gap-2 text-xs text-muted">
+          <span>against</span>
+          <span class="h-2.5 w-28 rounded-full" style="background:linear-gradient(90deg,#09090B,#8B5CF6,#EC4899,#FF5C00);outline:1px solid #3F3F46"></span>
+          <span>for</span>
+        </div>
+        <div class="relative" data-dropdown="heroClass">
+          <button type="button" class="dd-button flex items-center gap-2 text-sm bg-raised border border-line rounded-md px-3 py-1.5" aria-haspopup="listbox" aria-expanded="false">
+            <span class="text-muted">Evidence for</span><span class="dd-label font-medium">Gun</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="#A1A1AA" stroke-width="1.5"/></svg>
+          </button>
+          <ul class="dd-menu hidden absolute right-0 mt-1 w-44 bg-raised border border-line rounded-md py-1 z-30" role="listbox">
+            <li role="option" tabindex="-1" data-value="1" class="px-3 py-1.5 text-sm cursor-pointer hover:bg-line/60">Gun (class 1)</li>
+            <li role="option" tabindex="-1" data-value="2" class="px-3 py-1.5 text-sm cursor-pointer hover:bg-line/60">Point (class 2)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="relative px-2 sm:px-4 pb-2" id="heroChart"></div>
+    <figcaption class="px-5 pb-4 text-sm text-muted">Colour shows where the series pushed the model towards the chosen class. The green line marks where early classification decided: after 45 of 150 points.</figcaption>
+  </figure>
+</section>
+
+<!-- ================= Features ================= -->
+<section id="features" class="border-t border-line">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-20">
+    <h2 class="text-3xl font-semibold tracking-tight max-w-xl">Three additions to MiniRocket</h2>
+    <p class="mt-3 text-muted max-w-2xl">Each one is a separate module that reuses the original transform and the faster joint-PPV version, without changing them.</p>
+
+    <div class="mt-12 grid gap-4 lg:grid-cols-3">
+      <!-- Multi-pooling -->
+      <article class="bg-surface border border-line rounded-xl p-6 flex flex-col lg:border-t-rocket lg:border-t-2">
+        <div class="flex items-center gap-2 text-rocket">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="12" width="4" height="9" rx="1" fill="currentColor"/><rect x="10" y="7" width="4" height="14" rx="1" fill="currentColor"/><rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg>
+          <h3 class="font-semibold text-ink">Multi-pooling + difference series</h3>
+        </div>
+        <p class="mt-3 text-sm text-muted leading-relaxed">MiniRocket counts how often a pattern appears. Multi-pooling also measures how strongly, where and for how long, on the raw series and on its first difference. Each dataset keeps the extra feature only when its own training data shows a gain.</p>
+        <table class="mt-5 w-full text-sm">
+          <tbody class="divide-y divide-line">
+            <tr><td class="py-2 font-mono text-ink">PPV</td><td class="py-2 text-muted">how often</td><td class="py-2 text-right text-xs text-muted whitespace-nowrap">original</td></tr>
+            <tr><td class="py-2 font-mono text-rocket">MPV</td><td class="py-2 text-muted">how strongly</td><td class="py-2 text-right text-xs text-rocket whitespace-nowrap">kept if it helps</td></tr>
+            <tr><td class="py-2 font-mono text-ink">MIPV</td><td class="py-2 text-muted">where</td><td class="py-2 text-right text-xs text-muted whitespace-nowrap">ablation only</td></tr>
+            <tr><td class="py-2 font-mono text-ink">LSPV</td><td class="py-2 text-muted">how long</td><td class="py-2 text-right text-xs text-muted whitespace-nowrap">ablation only</td></tr>
+            <tr><td class="py-2 font-mono text-ink">Δx</td><td class="py-2 text-muted">difference series</td><td class="py-2 text-right text-xs text-muted whitespace-nowrap">ablation only</td></tr>
+          </tbody>
+        </table>
+        <p class="mt-auto pt-5 text-sm"><span class="font-mono text-rocket">89.97%</span> <span class="text-muted">vs</span> <span class="font-mono">89.73%</span> <span class="text-muted">on 20 datasets never used in development</span></p>
+      </article>
+
+      <!-- Explainability -->
+      <article class="bg-surface border border-line rounded-xl p-6 flex flex-col">
+        <div class="flex items-center gap-2 text-ai">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <h3 class="font-semibold text-ink">Explainability</h3>
+          <span class="ml-auto text-xs font-medium text-ai bg-ai/15 border border-ai/40 rounded-full px-2 py-0.5">exact</span>
+        </div>
+        <p class="mt-3 text-sm text-muted leading-relaxed">Every prediction is split over the time steps of the series. The colours add up to the model's own score, so the map shows what the model did, not an approximation of it.</p>
+        <div class="mt-5 rounded-lg border border-line overflow-hidden" id="miniHeat" aria-hidden="true"></div>
+        <p class="mt-auto pt-5 text-sm text-muted">Also: which pattern widths matter, and the time window that separates each class.</p>
+      </article>
+
+      <!-- Early classification -->
+      <article class="bg-surface border border-line rounded-xl p-6 flex flex-col">
+        <div class="flex items-center gap-2 text-early">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 9v4l3 2M9 2h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <h3 class="font-semibold text-ink">Early classification</h3>
+        </div>
+        <p class="mt-3 text-sm text-muted leading-relaxed">One model per prefix of the series and a confidence threshold learned from training data. The model answers as soon as it is reliably sure, which is what real-time fault detection needs.</p>
+        <div class="mt-5 rounded-lg border border-line overflow-hidden" id="miniSeen" aria-hidden="true"></div>
+        <div class="mt-4" aria-hidden="true">
+          <div class="relative h-2 rounded-full bg-raised">
+            <div class="absolute inset-y-0 left-0 rounded-full bg-early" style="width:30%"></div>
+            <div class="absolute -top-1.5 h-5 w-0.5 bg-ink" style="left:30%"></div>
+          </div>
+          <div class="mt-2 flex justify-between text-xs font-mono text-muted"><span>0%</span><span class="text-ink">decided at 30%</span><span>100%</span></div>
+        </div>
+        <p class="mt-auto pt-5 text-sm"><span class="font-mono text-early">99.33%</span> <span class="text-muted">accuracy on GunPoint, the same as waiting for the full series</span></p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Dashboard ================= -->
+<section id="dashboard" class="border-t border-line bg-surface/40">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-20">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h2 class="text-3xl font-semibold tracking-tight">Model dashboard</h2>
+        <p class="mt-2 text-muted">GunPoint model, plus benchmark results across 30 UCR datasets.</p>
+      </div>
+      <dl class="flex flex-wrap gap-2 text-xs">
+        <div class="bg-raised border border-line rounded-md px-2.5 py-1"><dt class="inline text-muted">Dataset</dt> <dd class="inline font-mono">GunPoint</dd></div>
+        <div class="bg-raised border border-line rounded-md px-2.5 py-1"><dt class="inline text-muted">Features chosen</dt> <dd class="inline font-mono">PPV</dd></div>
+        <div class="bg-raised border border-line rounded-md px-2.5 py-1"><dt class="inline text-muted">Train / test</dt> <dd class="inline font-mono">50 / 150</dd></div>
+      </dl>
+    </div>
+
+    <!-- KPI row -->
+    <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line rounded-xl overflow-hidden">
+      <div class="bg-surface p-5">
+        <p class="text-sm text-muted">Test accuracy</p>
+        <p class="mt-2 font-mono text-3xl">99.33<span class="text-lg text-muted">%</span></p>
+        <p class="mt-1 text-xs text-muted">GunPoint, 149 of 150 correct</p>
+      </div>
+      <div class="bg-surface p-5">
+        <p class="text-sm text-muted">Unseen datasets</p>
+        <p class="mt-2 font-mono text-3xl">89.97<span class="text-lg text-muted">%</span></p>
+        <p class="mt-1 text-xs"><span class="font-mono text-early">+0.24</span> <span class="text-muted">vs original, 5 better, 1 worse</span></p>
+      </div>
+      <div class="bg-surface p-5">
+        <p class="text-sm text-muted">Early decision</p>
+        <p class="mt-2 font-mono text-3xl text-early">30<span class="text-lg">%</span></p>
+        <p class="mt-1 text-xs text-muted">of the series needed, no accuracy lost</p>
+      </div>
+      <div class="bg-surface p-5">
+        <p class="text-sm text-muted">Prediction transform</p>
+        <p class="mt-2 font-mono text-3xl">0.005<span class="text-lg text-muted"> s</span></p>
+        <p class="mt-1 text-xs text-muted">per dataset, 9× faster than v1</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mt-10 border-b border-line flex gap-6 overflow-x-auto" role="tablist" aria-label="Dashboard views">
+      <button role="tab" aria-selected="true" aria-controls="panel-early" id="tab-early" class="tab pb-3 text-sm font-medium whitespace-nowrap border-b-2">Early classification</button>
+      <button role="tab" aria-selected="false" aria-controls="panel-explain" id="tab-explain" class="tab pb-3 text-sm font-medium whitespace-nowrap border-b-2">Explainability</button>
+      <button role="tab" aria-selected="false" aria-controls="panel-bench" id="tab-bench" class="tab pb-3 text-sm font-medium whitespace-nowrap border-b-2">Multi-pooling benchmark</button>
+    </div>
+
+    <!-- Panel: early classification -->
+    <div role="tabpanel" id="panel-early" aria-labelledby="tab-early" class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-5">
+      <div class="lg:col-span-3 bg-surface border border-line rounded-xl p-5">
+        <p class="font-medium">Confidence as the series arrives</p>
+        <p class="text-sm text-muted">GunPoint test series 0. A filled green point means confidence passed that prefix's threshold.</p>
+        <div class="relative mt-4" id="earlyChart"></div>
+        <div class="mt-3 flex flex-wrap gap-5 text-xs text-muted">
+          <span class="flex items-center gap-1.5"><span class="h-0.5 w-4 bg-ink"></span>confidence (margin)</span>
+          <span class="flex items-center gap-1.5"><span class="h-0.5 w-4 border-t-2 border-dashed border-early"></span>threshold learned from training data</span>
+          <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-early"></span>confident enough</span>
+        </div>
+      </div>
+      <div class="lg:col-span-2 bg-surface border border-line rounded-xl p-5">
+        <p class="font-medium">Five datasets</p>
+        <p class="text-sm text-muted">Accuracy and the share of each series used before deciding.</p>
+        <table class="mt-4 w-full text-sm">
+          <thead class="text-xs text-muted text-left"><tr><th class="font-medium pb-2">Dataset</th><th class="font-medium pb-2 pl-3 text-right">Full</th><th class="font-medium pb-2 pl-3 text-right">Early</th><th class="font-medium pb-2 pl-4">Series used</th></tr></thead>
+          <tbody id="earlyTable" class="divide-y divide-line"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel: explainability -->
+    <div role="tabpanel" id="panel-explain" aria-labelledby="tab-explain" class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-5" hidden>
+      <div class="lg:col-span-3 bg-surface border border-line rounded-xl p-5">
+        <p class="font-medium">Average evidence per class</p>
+        <p class="text-sm text-muted">Both gestures are separated at 12–22% of the movement (t = 18–32), when the hand leaves the hip.</p>
+        <div class="mt-4 space-y-4" id="classMaps"></div>
+      </div>
+      <div class="lg:col-span-2 bg-surface border border-line rounded-xl p-5">
+        <p class="font-medium">What the model relies on</p>
+        <p class="text-sm text-muted">Share of importance by pattern width. Dilation 1 looks at 9 consecutive points.</p>
+        <div class="relative mt-4" id="dilationChart"></div>
+      </div>
+    </div>
+
+    <!-- Panel: benchmark -->
+    <div role="tabpanel" id="panel-bench" aria-labelledby="tab-bench" class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-5" hidden>
+      <div class="lg:col-span-2 bg-surface border border-line rounded-xl p-5">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="font-medium">Three versions compared</p>
+            <p class="text-sm text-muted">Same classifier, 3 seeds per dataset.</p>
+          </div>
+          <div class="relative" data-dropdown="benchSet">
+            <button type="button" class="dd-button flex items-center gap-2 text-sm bg-raised border border-line rounded-md px-3 py-1.5" aria-haspopup="listbox" aria-expanded="false">
+              <span class="dd-label font-medium">20 unseen</span>
+              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="#A1A1AA" stroke-width="1.5"/></svg>
+            </button>
+            <ul class="dd-menu hidden absolute right-0 mt-1 w-52 bg-raised border border-line rounded-md py-1 z-30" role="listbox">
+              <li role="option" tabindex="-1" data-value="unseen" class="px-3 py-1.5 text-sm cursor-pointer hover:bg-line/60">20 unseen datasets</li>
+              <li role="option" tabindex="-1" data-value="dev" class="px-3 py-1.5 text-sm cursor-pointer hover:bg-line/60">10 development datasets</li>
+            </ul>
+          </div>
+        </div>
+        <table class="mt-4 w-full text-sm">
+          <thead class="text-xs text-muted text-left"><tr><th class="font-medium pb-2">Version</th><th class="font-medium pb-2 text-right">Accuracy</th><th class="font-medium pb-2 text-right">Better / equal / worse</th></tr></thead>
+          <tbody id="benchTable" class="divide-y divide-line"></tbody>
+        </table>
+        <div class="mt-6 pt-4 border-t border-line">
+          <p class="text-sm font-medium">Time per dataset</p>
+          <p class="text-xs text-muted">Measured with numba on a MacBook, 10 development datasets.</p>
+          <table class="mt-3 w-full text-sm font-mono">
+            <tbody class="divide-y divide-line">
+              <tr><td class="py-1.5 font-sans text-muted">Original</td><td class="py-1.5 text-right">0.029 s</td></tr>
+              <tr><td class="py-1.5 font-sans text-muted">Fast transform (joint PPV)</td><td class="py-1.5 text-right">0.026 s</td></tr>
+              <tr><td class="py-1.5 font-sans text-muted">Adaptive multi-pooling</td><td class="py-1.5 text-right">0.082 s</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="lg:col-span-3 bg-surface border border-line rounded-xl p-5">
+        <p class="font-medium">Change in accuracy per dataset</p>
+        <p class="text-sm text-muted" id="benchNote"></p>
+        <div class="relative mt-4" id="benchChart"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Method ================= -->
+<section id="method" class="border-t border-line">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-16 grid gap-10 md:grid-cols-3 text-sm">
+    <div>
+      <h2 class="text-lg font-semibold">How the results were kept honest</h2>
+    </div>
+    <p class="text-muted leading-relaxed">Every choice the models make, such as adding MPV or where to stop early, uses training data only. The design was fixed on 10 datasets and then checked on 20 datasets downloaded afterwards.</p>
+    <p class="text-muted leading-relaxed">Ideas that did not help are reported too: MIPV, LSPV and the difference series lowered accuracy in the ablation, so the final model does not use them by default.</p>
+  </div>
+</section>
+</main>
+
+<footer class="border-t border-line">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-wrap justify-between gap-4 text-xs text-muted">
+    <p>MSc Advanced AI group project, University College Dublin.</p>
+    <p>MiniRocket by Dempster, Schmidt and Webb (2021). Extended with a fast joint-PPV transform, group pruning, class-stratified thresholds, adaptive multi-pooling, explanations and early classification.</p>
+  </div>
+</footer>
+
+<!-- tooltip shared by all charts -->
+<div id="tip" class="tip fixed z-50 hidden bg-raised border border-line rounded-md px-2.5 py-1.5 text-xs leading-5"></div>
+
+<script id="data" type="application/json">{"series":[-1.125,-1.131,-1.138,-1.147,-1.139,-1.141,-1.144,-1.144,-1.155,-1.146,-1.15,-1.146,-1.142,-1.138,-1.139,-1.133,-1.121,-1.119,-1.101,-1.062,-0.989,-0.898,-0.796,-0.734,-0.697,-0.67,-0.669,-0.682,-0.685,-0.693,-0.681,-0.664,-0.634,-0.596,-0.58,-0.527,-0.432,-0.27,-0.103,0.079,0.284,0.454,0.574,0.707,0.818,0.925,0.976,1.023,1.097,1.11,1.148,1.158,1.15,1.159,1.152,1.158,1.149,1.153,1.147,1.153,1.167,1.154,1.158,1.172,1.168,1.178,1.184,1.183,1.172,1.192,1.192,1.185,1.187,1.175,1.183,1.174,1.174,1.187,1.182,1.195,1.175,1.187,1.19,1.197,1.192,1.186,1.188,1.198,1.196,1.202,1.205,1.211,1.216,1.198,1.206,1.202,1.196,1.166,1.137,1.073,1.009,0.908,0.768,0.644,0.473,0.339,0.213,0.049,-0.082,-0.231,-0.367,-0.464,-0.53,-0.59,-0.648,-0.69,-0.72,-0.739,-0.751,-0.763,-0.766,-0.785,-0.784,-0.789,-0.791,-0.802,-0.805,-0.815,-0.816,-0.819,-0.835,-0.845,-0.854,-0.873,-0.886,-0.92,-0.948,-0.997,-1.054,-1.137,-1.206,-1.281,-1.323,-1.346,-1.345,-1.301,-1.266,-1.213,-1.206,-1.218],"true_class":"1","heat_1":[0.00185,0.00219,0.00209,0.00224,0.00247,0.00336,0.00473,0.00603,0.0066,0.00821,0.0099,0.01145,0.01436,0.01583,0.01747,0.0195,0.02071,0.02112,0.02272,0.0229,0.02439,0.0259,0.02574,0.02625,0.02587,0.02582,0.0247,0.02441,0.02255,0.01976,0.01733,0.01238,0.006,0.00112,-0.00573,-0.01082,-0.01631,-0.02127,-0.02693,-0.03073,-0.03181,-0.02883,-0.02534,-0.02071,-0.01522,-0.00759,-0.00227,0.00462,0.01141,0.01691,0.02038,0.02396,0.02523,0.02841,0.02841,0.0293,0.02861,0.02753,0.02576,0.02559,0.02558,0.02329,0.02142,0.01986,0.01777,0.0163,0.01419,0.01266,0.01018,0.00907,0.00745,0.00703,0.00578,0.00561,0.00528,0.00395,0.00369,0.00395,0.00389,0.00432,0.004,0.00433,0.00406,0.0049,0.00684,0.00701,0.0077,0.00821,0.00865,0.00936,0.01029,0.01094,0.01108,0.01233,0.01115,0.01037,0.00777,0.00701,0.00392,0.00116,-0.00234,-0.00452,-0.00826,-0.00958,-0.01202,-0.01196,-0.01212,-0.00962,-0.00694,-0.00445,-0.00231,0.00139,0.00426,0.00848,0.01062,0.01399,0.01521,0.01633,0.01514,0.01501,0.01306,0.01137,0.00869,0.00756,0.00748,0.00738,0.00543,0.00599,0.00754,0.00844,0.0086,0.01061,0.01189,0.01376,0.01359,0.01401,0.01355,0.01466,0.01271,0.0136,0.01207,0.01221,0.00932,0.00779,0.00666,0.00592,0.00373,0.00309,0.0014,0.00093],"heat_2":[-0.00185,-0.00219,-0.00209,-0.00224,-0.00247,-0.00336,-0.00473,-0.00603,-0.0066,-0.00821,-0.0099,-0.01145,-0.01436,-0.01583,-0.01747,-0.0195,-0.02071,-0.02112,-0.02272,-0.0229,-0.02439,-0.0259,-0.02574,-0.02625,-0.02587,-0.02582,-0.0247,-0.02441,-0.02255,-0.01976,-0.01733,-0.01238,-0.006,-0.00112,0.00573,0.01082,0.01631,0.02127,0.02693,0.03073,0.03181,0.02883,0.02534,0.02071,0.01522,0.00759,0.00227,-0.00462,-0.01141,-0.01691,-0.02038,-0.02396,-0.02523,-0.02841,-0.02841,-0.0293,-0.02861,-0.02753,-0.02576,-0.02559,-0.02558,-0.02329,-0.02142,-0.01986,-0.01777,-0.0163,-0.01419,-0.01266,-0.01018,-0.00907,-0.00745,-0.00703,-0.00578,-0.00561,-0.00528,-0.00395,-0.00369,-0.00395,-0.00389,-0.00432,-0.004,-0.00433,-0.00406,-0.0049,-0.00684,-0.00701,-0.0077,-0.00821,-0.00865,-0.00936,-0.01029,-0.01094,-0.01108,-0.01233,-0.01115,-0.01037,-0.00777,-0.00701,-0.00392,-0.00116,0.00234,0.00452,0.00826,0.00958,0.01202,0.01196,0.01212,0.00962,0.00694,0.00445,0.00231,-0.00139,-0.00426,-0.00848,-0.01062,-0.01399,-0.01521,-0.01633,-0.01514,-0.01501,-0.01306,-0.01137,-0.00869,-0.00756,-0.00748,-0.00738,-0.00543,-0.00599,-0.00754,-0.00844,-0.0086,-0.01061,-0.01189,-0.01376,-0.01359,-0.01401,-0.01355,-0.01466,-0.01271,-0.0136,-0.01207,-0.01221,-0.00932,-0.00779,-0.00666,-0.00592,-0.00373,-0.00309,-0.0014,-0.00093],"predicted":"1","early":[{"points_seen":15,"prediction":"1","margin":0.4887452721595764,"threshold":null},{"points_seen":30,"prediction":"1","margin":1.9095604419708252,"threshold":null},{"points_seen":45,"prediction":"1","margin":1.7697815895080566,"threshold":0.1217460036277771},{"points_seen":60,"prediction":"1","margin":1.9772785902023315,"threshold":0.30041101574897766},{"points_seen":75,"prediction":"1","margin":2.109067440032959,"threshold":0.10374044626951218},{"points_seen":90,"prediction":"1","margin":2.4479544162750244,"threshold":0.23155859112739563},{"points_seen":105,"prediction":"1","margin":2.391270637512207,"threshold":0.060828518122434616},{"points_seen":120,"prediction":"1","margin":2.5942630767822266,"threshold":0.20032548904418945},{"points_seen":135,"prediction":"1","margin":2.3247344493865967,"threshold":0.029405394569039345},{"points_seen":150,"prediction":"1","margin":2.3444366455078125,"threshold":0.0}],"early_decision":45,"dilation_importance":[[1,23.4],[2,14.3],[3,11.6],[4,10.5],[5,3.3],[6,6.6],[7,6.6],[8,3.1],[9,3.1],[10,3.3],[11,2.3],[12,2.5],[14,2.5],[15,2.5],[16,2.2],[18,2.2]],"class_summaries":[{"class":"1","mean_series":[-0.965,-0.974,-0.979,-0.981,-0.977,-0.971,-0.965,-0.959,-0.955,-0.955,-0.956,-0.957,-0.958,-0.958,-0.959,-0.955,-0.946,-0.926,-0.9,-0.87,-0.842,-0.816,-0.796,-0.779,-0.765,-0.747,-0.733,-0.719,-0.708,-0.7,-0.691,-0.684,-0.674,-0.657,-0.634,-0.604,-0.56,-0.498,-0.416,-0.327,-0.231,-0.123,-0.024,0.073,0.165,0.256,0.346,0.432,0.52,0.61,0.7,0.786,0.877,0.968,1.051,1.128,1.206,1.277,1.333,1.369,1.391,1.409,1.418,1.42,1.424,1.424,1.424,1.424,1.425,1.425,1.426,1.427,1.426,1.426,1.426,1.424,1.424,1.423,1.419,1.415,1.407,1.397,1.383,1.364,1.34,1.312,1.28,1.239,1.195,1.149,1.096,1.041,0.979,0.914,0.847,0.779,0.711,0.644,0.574,0.501,0.426,0.351,0.274,0.193,0.116,0.038,-0.035,-0.109,-0.178,-0.247,-0.307,-0.362,-0.411,-0.454,-0.488,-0.518,-0.542,-0.564,-0.584,-0.604,-0.626,-0.65,-0.673,-0.695,-0.72,-0.745,-0.766,-0.784,-0.796,-0.809,-0.819,-0.829,-0.839,-0.853,-0.868,-0.886,-0.905,-0.924,-0.943,-0.957,-0.967,-0.976,-0.982,-0.987,-0.988,-0.987,-0.983,-0.977,-0.969,-0.965],"mean_heat":[0.00314,0.0035,0.00397,0.00444,0.00477,0.00516,0.00591,0.00636,0.00704,0.00782,0.00865,0.00936,0.01066,0.01136,0.01251,0.01391,0.01535,0.01616,0.01779,0.01864,0.02014,0.02179,0.02311,0.02384,0.02439,0.02453,0.02447,0.02438,0.02395,0.02283,0.02171,0.0196,0.01697,0.01424,0.01106,0.00774,0.00481,0.00166,-0.00172,-0.0047,-0.00713,-0.00882,-0.0097,-0.00978,-0.00982,-0.00904,-0.0081,-0.00694,-0.00516,-0.00326,-0.00148,0.00021,0.0013,0.00246,0.00404,0.00516,0.00612,0.00694,0.00753,0.00798,0.00854,0.00833,0.00814,0.00798,0.00767,0.0071,0.00667,0.00596,0.00514,0.00472,0.00437,0.00417,0.00405,0.00372,0.0036,0.00342,0.00318,0.0032,0.00302,0.00296,0.00303,0.00318,0.00315,0.00353,0.00386,0.00414,0.00421,0.00447,0.00464,0.00506,0.00562,0.00605,0.00645,0.00696,0.00721,0.00754,0.00738,0.00723,0.00691,0.00644,0.00547,0.00487,0.00406,0.00337,0.00273,0.0024,0.00222,0.00223,0.00259,0.00315,0.00361,0.00433,0.00524,0.00618,0.00689,0.00796,0.00887,0.0096,0.00996,0.01048,0.01073,0.01086,0.01054,0.01044,0.01045,0.01036,0.01038,0.01049,0.01076,0.01088,0.01094,0.01118,0.011,0.01112,0.01069,0.01031,0.00988,0.00957,0.00847,0.00806,0.00733,0.00673,0.00561,0.00508,0.0043,0.00355,0.00267,0.00207,0.00147,0.00105],"window":[18,33]},{"class":"2","mean_series":[-0.995,-0.995,-0.996,-0.995,-0.994,-0.994,-0.993,-0.992,-0.991,-0.991,-0.991,-0.991,-0.992,-0.992,-0.992,-0.992,-0.991,-0.986,-0.974,-0.95,-0.908,-0.854,-0.785,-0.708,-0.618,-0.523,-0.421,-0.312,-0.21,-0.12,-0.038,0.032,0.084,0.122,0.146,0.166,0.18,0.186,0.196,0.195,0.196,0.2,0.204,0.199,0.209,0.218,0.238,0.27,0.317,0.378,0.444,0.407,0.56,0.567,0.686,0.742,0.807,0.872,0.943,1.019,1.092,1.149,1.199,1.243,1.28,1.304,1.321,1.334,1.343,1.348,1.352,1.353,1.354,1.355,1.353,1.354,1.354,1.351,1.348,1.342,1.333,1.317,1.299,1.277,1.251,1.219,1.181,1.135,1.082,1.024,0.962,0.894,0.822,0.751,0.668,0.59,0.499,0.409,0.325,0.226,0.132,0.047,-0.045,-0.112,-0.185,-0.242,-0.293,-0.333,-0.363,-0.385,-0.404,-0.419,-0.433,-0.445,-0.458,-0.472,-0.488,-0.504,-0.523,-0.542,-0.56,-0.581,-0.601,-0.619,-0.638,-0.655,-0.67,-0.686,-0.7,-0.712,-0.724,-0.735,-0.745,-0.756,-0.767,-0.78,-0.795,-0.809,-0.826,-0.843,-0.861,-0.877,-0.893,-0.908,-0.923,-0.934,-0.944,-0.954,-0.963,-0.97],"mean_heat":[0.0029,0.00323,0.00367,0.0041,0.00441,0.00476,0.00545,0.00587,0.0065,0.00722,0.00799,0.00864,0.00984,0.01049,0.01154,0.01284,0.01417,0.01492,0.01642,0.01721,0.01859,0.02012,0.02133,0.022,0.02251,0.02264,0.02259,0.02251,0.02211,0.02107,0.02004,0.0181,0.01567,0.01314,0.01021,0.00715,0.00444,0.00154,-0.00159,-0.00434,-0.00658,-0.00815,-0.00896,-0.00903,-0.00907,-0.00834,-0.00748,-0.00641,-0.00477,-0.003,-0.00136,0.0002,0.0012,0.00227,0.00373,0.00476,0.00565,0.00641,0.00695,0.00737,0.00789,0.00769,0.00752,0.00736,0.00708,0.00655,0.00616,0.0055,0.00475,0.00435,0.00403,0.00385,0.00374,0.00343,0.00333,0.00315,0.00294,0.00295,0.00279,0.00273,0.0028,0.00293,0.00291,0.00326,0.00356,0.00382,0.00389,0.00413,0.00428,0.00468,0.00519,0.00559,0.00595,0.00643,0.00665,0.00696,0.00681,0.00668,0.00638,0.00594,0.00505,0.0045,0.00375,0.00311,0.00252,0.00221,0.00205,0.00206,0.00239,0.00291,0.00333,0.004,0.00484,0.0057,0.00636,0.00735,0.00819,0.00886,0.0092,0.00967,0.0099,0.01003,0.00973,0.00964,0.00965,0.00957,0.00958,0.00968,0.00993,0.01005,0.0101,0.01032,0.01015,0.01026,0.00986,0.00951,0.00912,0.00883,0.00782,0.00744,0.00676,0.00621,0.00518,0.00469,0.00397,0.00328,0.00246,0.00191,0.00136,0.00097],"window":[18,33]}],"meta":{"test_accuracy":0.9933333333333333,"chosen_feature_set":"PPV","train_examples":50,"test_examples":150,"series_length":150,"early":{"accuracy":0.9933333333333333,"earliness":0.30066666666666664,"harmonic_mean":0.8208008402258107,"mean_points_used":45.1}},"bench_dev":[["GunPoint",99.33,99.33],["ECG200",91.67,91.67],["Coffee",100.0,100.0],["Beef",86.67,86.67],["Wine",86.42,86.42],["Lightning7",80.37,81.28],["ItalyPowerDemand",96.53,96.53],["ArrowHead",85.71,86.29],["CBF",99.89,99.89],["FaceFour",98.86,98.11]],"bench_unseen":[["SyntheticControl",98.56,99.0],["TwoLeadECG",99.82,99.82],["MoteStrain",92.81,92.81],["SonyAIBORobotSurface1",89.3,89.3],["SonyAIBORobotSurface2",91.36,91.36],["Plane",100.0,100.0],["Trace",100.0,100.0],["OliveOil",93.33,93.33],["Meat",96.67,96.67],["Ham",70.79,71.11],["Herring",66.15,69.79],["Car",91.67,91.67],["DistalPhalanxOutlineCorrect",77.29,77.42],["MiddlePhalanxTW",54.33,54.33],["Symbols",98.22,98.22],["ToeSegmentation1",96.05,95.91],["ShapeletSim",100.0,100.0],["DiatomSizeReduction",92.81,92.81],["BeetleFly",88.33,88.33],["Fish",97.14,97.52]],"early_bench":[["GunPoint",99.33,99.33,30.1],["ECG200",91.0,89.0,18.1],["ItalyPowerDemand",96.31,91.64,51.8],["Trace",100.0,96.0,53.5],["SyntheticControl",98.67,93.33,29.5]]}</script>
+<script>
+/* =====================================================================
+   Charts: plain SVG built from the real model output embedded above.
+   ===================================================================== */
+const D = JSON.parse(document.getElementById("data").textContent);
+const C = { ink: "#FAFAFA", muted: "#A1A1AA", line: "#3F3F46", surface: "#18181B", rocket: "#FF5C00", ai: "#8B5CF6", early: "#10B981", grey: "#71717A" };
+const HEAT_STOPS = [[0, "#09090B"], [0.36, "#8B5CF6"], [0.68, "#EC4899"], [1, "#FF5C00"]];
+const NAMES = { "1": "Gun", "2": "Point" };
+const NS = "http://www.w3.org/2000/svg";
+
+function el(name, attrs = {}, parent) {
+  const node = document.createElementNS(NS, name);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+function scale(d0, d1, r0, r1) { return v => r0 + (v - d0) / (d1 - d0 || 1) * (r1 - r0); }
+function hex(h) { return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); }
+function heatColor(t) {               // t in [0,1]: 0 = evidence against (cold), 1 = evidence for (hot)
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 1; i < HEAT_STOPS.length; i++) {
+    const [p1, c1] = HEAT_STOPS[i - 1], [p2, c2] = HEAT_STOPS[i];
+    if (t <= p2) {
+      const f = (t - p1) / (p2 - p1), a = hex(c1), b = hex(c2);
+      return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * f)).join(",")})`;
+    }
+  }
+  return HEAT_STOPS.at(-1)[1];
+}
+const fmt = (v, d = 2) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d);
+
+/* tooltip */
+const tip = document.getElementById("tip");
+function showTip(html, event) {
+  tip.innerHTML = html; tip.classList.remove("hidden");
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = event.clientX + pad, y = event.clientY + pad;
+  if (x + w > innerWidth - 8) x = event.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = event.clientY - h - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.classList.add("hidden"); }
+
+/* ---------- series over heat map (hero, mini, class maps) ---------- */
+let gradientId = 0;
+function heatChart(container, series, heat, opts = {}) {
+  container.innerHTML = "";
+  const W = opts.width || 1000, H = opts.height || 300;
+  const m = opts.compact ? { l: 6, r: 6, t: 6, b: 6 } : { l: 44, r: 16, t: 16, b: 30 };
+  const n = series.length;
+  const x = scale(0, n - 1, m.l, W - m.r);
+  const lo = Math.min(...series), hi = Math.max(...series), padY = (hi - lo) * 0.12;
+  const y = scale(lo - padY, hi + padY, H - m.b, m.t);
+  const limit = Math.max(...heat.map(Math.abs)) || 1;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": opts.label || "time series with evidence heat map" }, container);
+
+  const id = "g" + (gradientId++);
+  const grad = el("linearGradient", { id, x1: m.l, x2: W - m.r, y1: 0, y2: 0, gradientUnits: "userSpaceOnUse" }, el("defs", {}, svg));
+  heat.forEach((h, i) => el("stop", { offset: i / (n - 1), "stop-color": heatColor((h / limit + 1) / 2) }, grad));
+  el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: `url(#${id})`, opacity: opts.opacity || 0.7, rx: 4 }, svg);
+
+  if (!opts.compact) {
+    const axis = el("g", { class: "axis" }, svg);
+    for (let t = 0; t < n; t += 25) {
+      el("text", { x: x(t), y: H - 10, "text-anchor": "middle" }, axis).textContent = t;
+    }
+    [lo, (lo + hi) / 2, hi].forEach(v => {
+      el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, axis).textContent = v.toFixed(1);
+    });
+  }
+  if (opts.window) {
+    const [a, b] = opts.window;
+    el("rect", { x: x(a), y: m.t + 1, width: x(b - 1) - x(a), height: H - m.t - m.b - 2, fill: "none", stroke: C.ink, "stroke-width": 1.5, "stroke-dasharray": "4 3", rx: 3 }, svg);
+  }
+  const d = series.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  el("path", { d, fill: "none", stroke: C.ink, "stroke-width": opts.compact ? 1.5 : 2, "stroke-linejoin": "round", pathLength: 1, class: opts.animate ? "draw" : "" }, svg);
+
+  if (opts.decision != null) {
+    const xd = x(opts.decision - 1);
+    el("line", { x1: xd, x2: xd, y1: m.t, y2: H - m.b, stroke: C.early, "stroke-width": 2.5 }, svg);
+    const label = el("g", {}, svg);
+    el("rect", { x: xd + 6, y: m.t + 6, width: 152, height: 22, rx: 4, fill: C.surface, stroke: C.early }, label);
+    el("text", { x: xd + 14, y: m.t + 21, fill: C.ink, "font-size": 12, "font-family": "Inter, sans-serif" }, label).textContent = `Decided: ${opts.decisionLabel}`;
+  }
+  if (opts.hover) {
+    const cross = el("line", { y1: m.t, y2: H - m.b, stroke: C.ink, "stroke-width": 1, opacity: 0 }, svg);
+    const dot = el("circle", { r: 5, fill: C.ink, stroke: C.surface, "stroke-width": 2, opacity: 0 }, svg);
+    const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+    hit.addEventListener("mousemove", e => {
+      const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+      const loc = p.matrixTransform(svg.getScreenCTM().inverse());
+      const t = Math.max(0, Math.min(n - 1, Math.round((loc.x - m.l) / (W - m.l - m.r) * (n - 1))));
+      cross.setAttribute("x1", x(t)); cross.setAttribute("x2", x(t)); cross.setAttribute("opacity", 0.5);
+      dot.setAttribute("cx", x(t)); dot.setAttribute("cy", y(series[t])); dot.setAttribute("opacity", 1);
+      showTip(`<div class="font-mono">t = ${t}</div><div>value <span class="font-mono">${series[t].toFixed(2)}</span></div>
+               <div>evidence <span class="font-mono">${fmt(heat[t], 4)}</span> <span class="text-muted">${heat[t] >= 0 ? "for" : "against"} ${opts.className || ""}</span></div>`, e);
+    });
+    hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); hideTip(); });
+  }
+  return svg;
+}
+
+/* hero + mini heat strip */
+const hero = document.getElementById("heroChart");
+let heroClass = "1";
+function drawHero(cls, animate) {
+  heroClass = cls;
+  const narrow = hero.clientWidth < 640;                 // taller drawing on phones so it stays readable
+  heatChart(hero, D.series, D["heat_" + cls], { hover: true, animate, decision: D.early_decision, decisionLabel: "Gun at 30%",
+    width: narrow ? 560 : 1000, height: narrow ? 380 : 300,
+    className: NAMES[cls], label: `GunPoint test series with evidence for ${NAMES[cls]}` });
+}
+drawHero("1", true);
+let resizeTimer;
+addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => drawHero(heroClass, false), 150); });
+heatChart(document.getElementById("miniHeat"), D.series, D.heat_1, { compact: true, width: 400, height: 260, opacity: 0.75 });
+seenChart(document.getElementById("miniSeen"));
+
+/* mini chart: the part of the series received before the decision */
+function seenChart(container) {
+  const W = 400, H = 150, m = 8, n = D.series.length, k = D.early_decision;
+  const x = scale(0, n - 1, m, W - m), lo = Math.min(...D.series), hi = Math.max(...D.series);
+  const y = scale(lo - 0.15, hi + 0.15, H - m, m);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%" }, container);
+  el("rect", { x: x(k - 1), y: 0, width: W - x(k - 1), height: H, fill: "#27272A", opacity: 0.6 }, svg);
+  const path = from => D.series.slice(from[0], from[1]).map((v, i) => `${i ? "L" : "M"}${x(i + from[0]).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  el("path", { d: path([k - 1, n]), fill: "none", stroke: C.grey, "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
+  el("path", { d: path([0, k]), fill: "none", stroke: C.ink, "stroke-width": 2 }, svg);
+  el("line", { x1: x(k - 1), x2: x(k - 1), y1: 0, y2: H, stroke: C.early, "stroke-width": 2.5 }, svg);
+}
+
+/* ---------- early classification chart ---------- */
+function earlyChart(container) {
+  const W = 640, H = 260, m = { l: 44, r: 16, t: 14, b: 34 };
+  const steps = D.early, n = D.series.length;
+  const x = scale(0, n, m.l, W - m.r);
+  const maxY = Math.ceil(Math.max(...steps.map(s => s.margin)) + 0.3);
+  const y = scale(0, maxY, H - m.b, m.t);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "confidence against points received" }, container);
+  const grid = el("g", { class: "grid" }, svg), axis = el("g", { class: "axis" }, svg);
+  for (let v = 0; v <= maxY; v++) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), opacity: 0.6 }, grid);
+    el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, axis).textContent = v;
+  }
+  steps.forEach(s => { el("text", { x: x(s.points_seen), y: H - 12, "text-anchor": "middle" }, axis).textContent = Math.round(100 * s.points_seen / n) + "%"; });
+  const xd = x(D.early_decision);
+  el("rect", { x: xd, y: m.t, width: W - m.r - xd, height: H - m.t - m.b, fill: C.early, opacity: 0.06 }, svg);
+  el("line", { x1: xd, x2: xd, y1: m.t, y2: H - m.b, stroke: C.early, "stroke-width": 2 }, svg);
+  steps.forEach(s => {
+    if (s.threshold == null) return;
+    el("line", { x1: x(s.points_seen) - 12, x2: x(s.points_seen) + 12, y1: y(s.threshold), y2: y(s.threshold), stroke: C.early, "stroke-width": 2, "stroke-dasharray": "3 3" }, svg);
+  });
+  const d = steps.map((s, i) => `${i ? "L" : "M"}${x(s.points_seen)},${y(s.margin)}`).join("");
+  el("path", { d, fill: "none", stroke: C.ink, "stroke-width": 2 }, svg);
+  steps.forEach(s => {
+    const ok = s.threshold != null && s.margin >= s.threshold;
+    const g = el("g", { tabindex: 0, role: "img", "aria-label": `${Math.round(100 * s.points_seen / n)} percent: confidence ${s.margin.toFixed(2)}` }, svg);
+    el("circle", { cx: x(s.points_seen), cy: y(s.margin), r: 14, fill: "transparent" }, g);
+    el("circle", { cx: x(s.points_seen), cy: y(s.margin), r: 5.5, fill: ok ? C.early : C.surface, stroke: ok ? C.surface : C.muted, "stroke-width": 2 }, g);
+    const html = `<div class="font-mono">${s.points_seen} of ${n} points (${Math.round(100 * s.points_seen / n)}%)</div>
+      <div>guess <span class="font-mono">${NAMES[s.prediction]}</span></div>
+      <div>confidence <span class="font-mono">${s.margin.toFixed(2)}</span></div>
+      <div>threshold <span class="font-mono">${s.threshold == null ? "never stops here" : s.threshold.toFixed(2)}</span></div>`;
+    g.addEventListener("mousemove", e => showTip(html, e));
+    g.addEventListener("mouseleave", hideTip);
+    g.addEventListener("focus", () => { const r = g.getBoundingClientRect(); showTip(html, { clientX: r.right, clientY: r.top }); });
+    g.addEventListener("blur", hideTip);
+  });
+  const lab = el("g", {}, svg);
+  el("text", { x: xd + 8, y: m.t + 14, fill: C.ink, "font-size": 12, "font-family": "Inter, sans-serif" }, lab).textContent = "Decision: Gun, 45 of 150 points";
+}
+earlyChart(document.getElementById("earlyChart"));
+
+document.getElementById("earlyTable").innerHTML = D.early_bench.map(([name, full, early, used]) => `
+  <tr><td class="py-2">${name}</td><td class="py-2 pl-3 text-right font-mono text-muted">${full.toFixed(1)}%</td>
+  <td class="py-2 pl-3 text-right font-mono">${early.toFixed(1)}%</td>
+  <td class="py-2 pl-4"><div class="flex items-center gap-2"><div class="hidden sm:block h-1.5 w-24 rounded-full bg-raised"><div class="h-full rounded-full bg-early" style="width:${used}%"></div></div><span class="font-mono text-xs text-muted">${Math.round(used)}%</span></div></td></tr>`).join("");
+
+/* ---------- explainability panel ---------- */
+const maps = document.getElementById("classMaps");
+D.class_summaries.forEach(s => {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `<p class="text-sm mb-1.5"><span class="font-medium">${NAMES[s.class]}</span> <span class="text-muted">class ${s.class}, average of the training series, dashed box = strongest evidence</span></p>`;
+  const box = document.createElement("div"); box.className = "rounded-lg border border-line overflow-hidden"; wrap.appendChild(box);
+  maps.appendChild(wrap);
+  heatChart(box, s.mean_series, s.mean_heat, { compact: true, width: 640, height: 120, opacity: 0.65, window: s.window, label: `average evidence for ${NAMES[s.class]}` });
+});
+
+function barChart(container, rows) {                         // rows: [label, value]
+  const W = 420, H = 230, m = { l: 34, r: 8, t: 10, b: 28 };
+  const max = Math.max(...rows.map(r => r[1]));
+  const bw = (W - m.l - m.r) / rows.length;
+  const y = scale(0, Math.ceil(max / 5) * 5, H - m.b, m.t);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "importance by dilation" }, container);
+  const grid = el("g", { class: "grid" }, svg), axis = el("g", { class: "axis" }, svg);
+  for (let v = 0; v <= Math.ceil(max / 5) * 5; v += 10) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), opacity: 0.6 }, grid);
+    el("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end" }, axis).textContent = v + "%";
+  }
+  rows.forEach(([label, v], i) => {
+    const bx = m.l + i * bw + 1, w = Math.max(2, bw - 2), top = y(v), h = H - m.b - top, r = Math.min(4, w / 2);
+    const g = el("g", {}, svg);
+    el("rect", { x: bx - 1, y: m.t, width: bw, height: H - m.t - m.b, fill: "transparent" }, g);
+    el("path", { d: `M${bx},${H - m.b}V${top + r}q0,-${r} ${r},-${r}h${w - 2 * r}q${r},0 ${r},${r}V${H - m.b}Z`, fill: C.ai }, g);
+    if (i % 2 === 0 || rows.length < 10) el("text", { x: bx + w / 2, y: H - 10, "text-anchor": "middle" }, axis).textContent = label;
+    g.addEventListener("mousemove", e => showTip(`<div>dilation <span class="font-mono">${label}</span> (pattern spans ${8 * label + 1} points)</div><div class="font-mono">${v.toFixed(1)}% of importance</div>`, e));
+    g.addEventListener("mouseleave", hideTip);
+  });
+}
+barChart(document.getElementById("dilationChart"), D.dilation_importance);
+
+/* ---------- benchmark panel ---------- */
+const SUMMARY = {
+  unseen: { rows: [["Original MiniRocket", 89.73, "—"], ["Fast transform (joint PPV)", 89.73, "0 / 20 / 0"], ["Adaptive multi-pooling", 89.97, "5 / 14 / 1"]], data: D.bench_unseen,
+            note: "20 datasets downloaded after the design was fixed. Datasets with no change are listed below the chart." },
+  dev:    { rows: [["Original MiniRocket", 92.55, "—"], ["Fast transform (joint PPV)", 92.55, "0 / 10 / 0"], ["Adaptive multi-pooling", 92.62, "2 / 7 / 1"]], data: D.bench_dev,
+            note: "The 10 datasets used while designing the model." },
+};
+function benchChart(container, data) {
+  container.innerHTML = "";
+  const changed = data.map(([n, o, a]) => [n, +(a - o).toFixed(2)]).filter(r => Math.abs(r[1]) > 1e-9).sort((p, q) => q[1] - p[1]);
+  const same = data.filter(([n, o, a]) => Math.abs(a - o) <= 1e-9).map(r => r[0]);
+  const rowH = 30, W = 620, m = { l: 190, r: 64, t: 8, b: 26 }, H = m.t + m.b + rowH * changed.length;
+  const lim = Math.max(1, ...changed.map(r => Math.abs(r[1])));
+  const x = scale(-lim, lim, m.l, W - m.r);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "change in accuracy per dataset" }, container);
+  const axis = el("g", { class: "axis" }, svg);
+  [-lim, 0, lim].forEach(v => {
+    el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, stroke: C.line, "stroke-dasharray": v ? "2 3" : "" }, svg);
+    el("text", { x: x(v), y: H - 8, "text-anchor": "middle" }, axis).textContent = (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + " pts";
+  });
+  changed.forEach(([name, v], i) => {
+    const cy = m.t + i * rowH + rowH / 2, x0 = x(0), x1 = x(v), good = v > 0;
+    const g = el("g", {}, svg);
+    el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: "transparent" }, g);
+    el("text", { x: m.l - 12, y: cy + 4, "text-anchor": "end", fill: C.ink, "font-size": 12, "font-family": "Inter, sans-serif" }, g).textContent = name;
+    const bx = Math.min(x0, x1), w = Math.max(3, Math.abs(x1 - x0));
+    el("rect", { x: bx, y: cy - 7, width: w, height: 14, rx: 4, fill: good ? C.early : C.grey }, g);
+    el("text", { x: good ? x1 + 8 : x0 + 8, y: cy + 4, fill: C.ink, "font-size": 11, "font-family": "JetBrains Mono, monospace" }, g).textContent = fmt(v);
+    const row = data.find(r => r[0] === name);
+    g.addEventListener("mousemove", e => showTip(`<div class="font-medium">${name}</div><div>original <span class="font-mono">${row[1].toFixed(2)}%</span></div><div>adaptive <span class="font-mono">${row[2].toFixed(2)}%</span></div>`, e));
+    g.addEventListener("mouseleave", hideTip);
+  });
+  const p = document.createElement("p");
+  p.className = "mt-3 text-xs text-muted leading-5";
+  p.textContent = `No change (${same.length}): ${same.join(", ")}.`;
+  container.appendChild(p);
+}
+function drawBench(key) {
+  const s = SUMMARY[key];
+  document.getElementById("benchTable").innerHTML = s.rows.map(([v, acc, wtl], i) => `
+    <tr><td class="py-2 ${i === 2 ? "text-rocket font-medium" : ""}">${v}</td><td class="py-2 text-right font-mono">${acc.toFixed(2)}%</td><td class="py-2 text-right font-mono text-muted">${wtl}</td></tr>`).join("");
+  document.getElementById("benchNote").textContent = s.note;
+  benchChart(document.getElementById("benchChart"), s.data);
+}
+drawBench("unseen");
+
+/* ---------- tabs (keyboard: left/right arrows) ---------- */
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function selectTab(tab) {
+  tabs.forEach(t => {
+    const on = t === tab;
+    t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1;
+    t.classList.toggle("text-ink", on); t.classList.toggle("border-rocket", on);
+    t.classList.toggle("text-muted", !on); t.classList.toggle("border-transparent", !on);
+    document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+  });
+  hideTip();
+}
+tabs.forEach((t, i) => {
+  t.addEventListener("click", () => selectTab(t));
+  t.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      selectTab(next); next.focus();
+    }
+  });
+});
+selectTab(tabs[0]);
+
+/* ---------- dropdowns (click, Enter/Space, arrows, Escape) ---------- */
+const ACTIONS = {
+  heroClass: (value, text) => { drawHero(value, false); return NAMES[value]; },
+  benchSet: (value, text) => { drawBench(value); return value === "unseen" ? "20 unseen" : "10 development"; },
+};
+document.querySelectorAll("[data-dropdown]").forEach(dd => {
+  const button = dd.querySelector(".dd-button"), menu = dd.querySelector(".dd-menu"), options = [...menu.querySelectorAll('[role="option"]')];
+  const open = () => { menu.classList.remove("hidden"); button.setAttribute("aria-expanded", "true"); options[0].focus(); };
+  const close = (focus) => { menu.classList.add("hidden"); button.setAttribute("aria-expanded", "false"); if (focus) button.focus(); };
+  const choose = o => { dd.querySelector(".dd-label").textContent = ACTIONS[dd.dataset.dropdown](o.dataset.value, o.textContent); close(true); };
+  button.addEventListener("click", () => menu.classList.contains("hidden") ? open() : close());
+  options.forEach((o, i) => {
+    o.addEventListener("click", () => choose(o));
+    o.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(o); }
+      if (e.key === "ArrowDown") { e.preventDefault(); options[(i + 1) % options.length].focus(); }
+      if (e.key === "ArrowUp") { e.preventDefault(); options[(i + options.length - 1) % options.length].focus(); }
+      if (e.key === "Escape") close(true);
+    });
+  });
+  document.addEventListener("click", e => { if (!dd.contains(e.target)) close(); });
+});
+</script>
+</body>
+</html>

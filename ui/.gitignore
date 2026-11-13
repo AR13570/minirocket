@@ -1,0 +1,3 @@
+# trained model artifacts are rebuilt with train_and_save.py (not stored in Git)
+artifacts/
+__pycache__/

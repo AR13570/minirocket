@@ -1,0 +1,14 @@
+# Libraries for the UI / API (on top of the project's own: numpy, numba, scikit-learn, scipy, pandas, aeon)
+# For a reproducible deployment, freeze exact versions after a successful run:
+#     pip freeze > ui/requirements.lock
+numpy
+numba
+scikit-learn
+scipy
+pandas
+matplotlib
+aeon
+joblib
+streamlit>=1.36          # st.navigation (multi-page menu)
+fastapi
+uvicorn
