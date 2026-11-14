@@ -64,7 +64,9 @@ MINIROCKET (including a basic multivariate implementation) is also available thr
 
 ## Results
 
-### Joint PPV
+### Joint PPV (Mac)
+
+Measured on **macOS, Apple ARM64, 16 GB RAM**, with one Numba thread.
 
 The published results below compare original MiniRocket with optimized joint PPV
 using pooling helpers 1 through 8, at matching feature counts. To benchmark joint
@@ -101,29 +103,31 @@ intervals and regressions are included in the full report. Results apply to the
 measured machine and compiler environment and are not a universal speed guarantee
 or an accuracy improvement.
 
-### Group pruning and bias strategies
+### Group pruning and bias strategies (Windows)
 
-The [committed pruning study](./results/group_pruning_full/report.md) covers
-113 datasets, three fitting seeds and 10,000 requested features (9,996 actual),
-using original biases and both filter and ridge scoring. Keeping half the groups
-with joint PPV used about **36-46% of the unpruned original TEST transform time**,
-with a mean accuracy loss of **0.05-0.27 percentage points**, depending on the
-scorer. More aggressive pruning saves additional work at a larger accuracy cost;
-selection also adds training work. Filter scoring is the guide's recommended
-choice because it is much cheaper than iterative ridge selection.
+Measured on **Windows 11, AMD Ryzen 9 8940HX**, with one Numba thread. The
+[pruning benchmark](./results/group_pruning_full/report.md) used 113 datasets,
+three seeds and original biases, starting from **9,996 features (10,000 requested)**.
+All reductions below compare against unpruned original MiniRocket on that machine.
 
-The [control experiments](./results/controls/controls_analysis.md) found similar
-accuracy with random group selection, supporting the interpretation that the
-savings come from skipping computation. The
-[bias study](./results/group_pruning_bias_all_20seeds/bias_analysis.md), across
-113 datasets and 20 seeds, found no consistent accuracy or stability benefit
-from class stratification over uniform sampling; the mean accuracy difference
-was -0.002 percentage points.
+| Method | TEST transform time reduction | Mean accuracy |
+|---|---:|---:|
+| Original MiniRocket | Baseline | 86.08% |
+| Joint PPV, unpruned | 18.9% | 86.08% |
+| Joint PPV + filter pruning, keeping half the groups | 53.7% | 86.03% |
+| Joint PPV + ridge pruning, keeping half the groups | 63.8% | 85.81% |
 
-These experiments use the extension runner's timing protocol, which differs from
-the joint PPV study above. Their timing ratios should be interpreted within each
-study. See the [group pruning and bias guide](./README_GROUP_PRUNING.md) for
-tradeoffs, statistical comparisons and all recorded experiment settings.
+Pruning adds selection work during training and can reduce accuracy; filter
+scoring is the cheaper option.
+
+The [controls](./results/controls/controls_analysis.md) found similar accuracy
+with random group selection. The
+[bias study](./results/group_pruning_bias_all_20seeds/bias_analysis.md) found no
+consistent benefit from class-stratified thresholds over uniform sampling.
+
+The Mac and Windows studies use different hardware and timing protocols, so their
+speed reductions should not be compared directly. See the
+[group pruning and bias guide](./README_GROUP_PRUNING.md) for details.
 
 ### Run the combined benchmark
 
@@ -149,10 +153,6 @@ and writes each to its own folder. Analysis follows each successful run.
 The commands use the extension guide's recommended `filter` scorer. Iterative
 ridge scoring is substantially more expensive; use `--scorers ridge filter`
 to compare both scoring methods. A full sweep can take many hours.
-
-The [committed pruning study](./results/group_pruning_full/report.md) covers
-10,000 requested features, three seeds, original biases and both scorers. See
-the [extension guide](./README_GROUP_PRUNING.md) for the other recorded experiments.
 
 ```bash
 # Limit native threads for comparable timings.
