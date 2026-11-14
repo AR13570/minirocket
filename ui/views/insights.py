@@ -3,7 +3,7 @@ import streamlit as st
 
 import common
 
-st.title("🧭 Model insights")
+common.page_header("views/insights.py")
 bundle = common.bundle_for_current()
 meta = bundle.metadata
 

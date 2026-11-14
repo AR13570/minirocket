@@ -25,6 +25,10 @@ st.set_page_config(page_title="MiniRocket Explorer", page_icon="📈", layout="w
 
 import common                                     # noqa: E402  (paths, caches, feature list)
 import service                                    # noqa: E402
+import style                                      # noqa: E402
+
+style.inject()                                    # look and motion (every page)
+common.apply_plot_theme()                         # plots follow the light / dark theme
 
 # ---------------------------------------------------------------------------
 # Menu: one page per feature, grouped into sections

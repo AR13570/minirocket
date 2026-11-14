@@ -6,7 +6,7 @@ import common
 import service
 
 dataset, seed = common.current_dataset()
-st.title("🎯 Adaptive multi-pooling")
+common.page_header("views/adaptive_pooling.py")
 st.markdown("Standard MiniRocket only counts **how often** each pattern appears (PPV). Adaptive "
             "multi-pooling can also measure **how strongly** it appears (MPV). Five-fold "
             "cross-validation on the training set decides, per dataset, whether the extra features "

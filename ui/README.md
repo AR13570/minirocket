@@ -19,7 +19,8 @@ The web app and API live in **this one folder** (`ui/`).
 |---|---|
 | `app.py` | the web app's frame: page set-up, menu, dataset chooser (Streamlit) |
 | `views/` | one file per page (10 pages, listed in section 4) |
-| `common.py` | shared by all pages: feature list, cached data/models, plotting helpers |
+| `common.py` | shared by all pages: feature list, cached data/models, plotting helpers (plots follow the light/dark theme) |
+| `style.py` | look and motion: style sheet, animated home banner, page headers, race bars |
 | `transform_service.py` | logic for the Fast transform and Reproduction pages |
 | `warm_up.py` | compiles every page's code once (used by the Dockerfile; optional locally) |
 | `api.py` | REST API (FastAPI) for other programs / a future web frontend |
@@ -87,7 +88,7 @@ are trained once per dataset and shared by all pages.
 | Classify & explain | **Adaptive multi-pooling** | accuracy, the feature set chosen by cross-validation (PPV or PPV+MPV), benchmark of original vs. fast transform vs. adaptive model |
 | | **Explain a prediction** | pick a test series (or **upload your own CSV**); prediction, confidence and the **heat map**; choose which class to explain |
 | | **Model insights** | importance of pattern widths and kernels; evidence map per class; what separates the classes |
-| Real time | **Early classification** | drag "points received so far": the plot fills in as if data were arriving live; a green line marks the moment the model decides |
+| Real time | **Early classification** | press **Play** to watch a series arrive point by point with the model's guess and confidence updating live, or step through it by hand; a green line marks the moment the model decides |
 | Speed & size | **Fast transform (joint PPV)** | live timing of the original vs. the joint-PPV transform on the dataset, with a bit-for-bit identity check; the 113-dataset benchmark |
 | | **Group pruning** | prune a model live (ranking `ridge`/`filter`, threshold strategy, shares to keep): accuracy, speed and size per share; map of surviving groups; the 113-dataset benchmark |
 | | **Class-stratified thresholds** | which class supplies each group's thresholds (random vs. stratified); 3-seed comparison of the strategies; the 113 × 20-seed result |
@@ -96,6 +97,13 @@ are trained once per dataset and shared by all pages.
 
 The app shows feature names only (no author names). If `code/minirocket_pruned.py` is missing,
 the Group pruning and Class-stratified thresholds pages show a short notice; all other pages work.
+
+**Look and motion.** The app uses a dark theme with the project colours, set in
+`.streamlit/config.toml` at the repository root (Streamlit reads it from the folder the app is
+started in; delete that file for Streamlit's default theme). `style.py` adds the animated home
+banner, page headers, hover effects and the "race" bars that compare times and sizes. Plots are
+drawn to match the theme. Animations are switched off automatically for visitors whose system
+asks for reduced motion.
 
 **Uploading your own series:** a `.csv` or `.txt` file with one series, either one row
 (`1.2,1.5,1.9,...`) or one column (one number per line). A header line is fine. If its
@@ -108,7 +116,7 @@ length differs from the dataset's, it is resampled automatically (the app says s
 3. *Fast transform*: "same features, bit for bit, in less time".
 4. *Group pruning*: "keep half the groups, lose almost nothing, transform much faster".
 5. *Explain a prediction* (GunPoint): "red is where the model found its evidence: the moment the hand leaves the hip".
-6. *Early classification*: drag the slider; the model decides at 30% of the movement.
+6. *Early classification*: press Play; the model decides at 30% of the movement.
 
 ---
 

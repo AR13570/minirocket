@@ -3,7 +3,7 @@ import streamlit as st
 
 import common
 
-st.title("ℹ️ About this project")
+common.page_header("About this project", "What MiniRocket is and what this project adds")
 st.markdown("""
 **MiniRocket** (Dempster, Schmidt and Webb, KDD 2021) classifies time series by sliding 84 fixed
 pattern detectors over the series at several widths and counting how often each pattern appears

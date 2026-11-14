@@ -5,7 +5,7 @@ import streamlit as st
 import common
 import service
 
-st.title("🔍 Explain a prediction")
+common.page_header("views/explain.py")
 st.markdown("Why did the model decide that? The heat map spreads the model's score over the time "
             "steps: red parts push towards the class, blue parts push away, and the colours add up "
             "exactly to the score.")

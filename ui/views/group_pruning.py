@@ -5,9 +5,10 @@ import pandas as pd
 import streamlit as st
 
 import common
+import style
 
 ps = common.pruning_service()
-st.title("✂️ Group pruning")
+common.page_header("views/group_pruning.py")
 if ps is None:
     common.feature_unavailable("group pruning")
 dataset, seed = common.current_dataset()
@@ -59,6 +60,16 @@ with tab_try:
                   f"{(1 - pick['time_ratio']) * 100:.0f}% faster" if pick["time_ratio"] < 1 else None)
         m4.metric("Model size", f"{pick['model_kb']:.0f} KB", f"was {full['model_kb']:.0f} KB", delta_color="off")
         st.caption("Highlighted: the smallest model that loses at most 1 percentage point of accuracy.")
+        style.race_bars([
+            ("Full model: test time", full["test_seconds"], f"{1000 * full['test_seconds']:.1f} ms", None),
+            (f"Keeping {pick['keep_fraction']:.0%}: test time", pick["test_seconds"],
+             f"{1000 * pick['test_seconds']:.1f} ms", (style.ROCKET, style.HEAT)),
+        ])
+        style.race_bars([
+            ("Full model: size", full["model_kb"], f"{full['model_kb']:.0f} KB", None),
+            (f"Keeping {pick['keep_fraction']:.0%}: size", pick["model_kb"], f"{pick['model_kb']:.0f} KB",
+             (style.EARLY, "#22D3EE")),
+        ], slowest_seconds=1.2)
 
     st.dataframe(pd.DataFrame([{
         "keep": f"{r['keep_fraction']:.0%}", "groups kept": f"{r['groups_kept']:,} / {r['groups_total']:,}",
@@ -96,7 +107,7 @@ with tab_groups:
                                   format_func=lambda f: f"{f:.0%}", key="prune_map")
         mask = result.masks[chosen]
         fig, ax = plt.subplots(figsize=(11, 0.35 * len(result.dilations) + 1.2))
-        ax.imshow(mask, aspect="auto", cmap=matplotlib.colors.ListedColormap(["#EAECEE", common.GREEN]),
+        ax.imshow(mask, aspect="auto", cmap=matplotlib.colors.ListedColormap([common.off_colour(), common.GREEN]),
                   interpolation="nearest")
         ax.set_yticks(range(len(result.dilations)), [str(d) for d in result.dilations])
         ax.set_ylabel("dilation (pattern width)")

@@ -6,7 +6,7 @@ import streamlit as st
 import common
 import transform_service as ts
 
-st.title("📄 Reproduction of the paper")
+common.page_header("views/reproduction.py")
 st.markdown("Before improving MiniRocket we re-ran it on the UCR archive with the published settings "
             "(the paper's first train/test split, 10,000 features, ridge classifier) and compared the "
             "accuracy with the results published by the authors, dataset by dataset.")

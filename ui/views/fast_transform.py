@@ -3,10 +3,11 @@ import pandas as pd
 import streamlit as st
 
 import common
+import style
 import transform_service as ts
 
 dataset, seed = common.current_dataset()
-st.title("⚡ Fast transform (joint PPV)")
+common.page_header("views/fast_transform.py")
 st.markdown("The original MiniRocket transform scans the convolution output **once per threshold** "
             "to count positive values. The joint-PPV transform counts **all thresholds of a kernel in "
             "one pass**. The features are bit-for-bit identical, so accuracy cannot change; only the "
@@ -29,6 +30,11 @@ c2.metric("Joint PPV transform", f"{1000 * result['joint_seconds']:.1f} ms",
           f"{(result['ratio'] - 1) * 100:.0f}% more time", delta_color="normal" if result["ratio"] < 1 else "inverse")
 c3.metric("Identical features", "yes ✓" if result["identical"] else "NO ✗")
 c4.metric("Features per series", f"{result['features']:,}")
+style.race_bars([
+    ("Original transform", result["original_seconds"], f"{1000 * result['original_seconds']:.1f} ms", None),
+    ("Joint PPV transform", result["joint_seconds"], f"{1000 * result['joint_seconds']:.1f} ms",
+     (style.ROCKET, style.HEAT)),
+])
 st.caption(f"TEST set of {result['n_test']} series of length {result['length']}, median of 5 runs on this "
            "computer. Very small datasets take only milliseconds, so their timings are noisy.")
 

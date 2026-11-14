@@ -7,7 +7,7 @@ import common
 import minirocket                                # code/minirocket.py (original MiniRocket)
 
 ps = common.pruning_service()
-st.title("⚖️ Class-stratified thresholds")
+common.page_header("views/stratified.py")
 if ps is None:
     common.feature_unavailable("class-stratified thresholds")
 dataset, seed = common.current_dataset()

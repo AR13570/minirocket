@@ -30,6 +30,7 @@ COPY experiments/ experiments/
 COPY results/ results/
 COPY README_GROUP_PRUNING.md ./
 COPY ui/ ui/
+COPY .streamlit/ .streamlit/
 
 # 3. Build model artifacts AND numba's compile cache at build time,
 #    so the first user never waits for training or compilation (no "cold start").

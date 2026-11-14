@@ -6,7 +6,7 @@ Author : Shreyas Shinde (Student ID 26104692)
   * the list of features (used by the menu in app.py and the cards on the home page)
   * cached loading of datasets and models (shared by all pages, built once per session)
   * the dataset / seed chosen in the sidebar
-  * small plotting helpers and colours
+  * small plotting helpers and colours (plots follow the app's light or dark theme)
 """
 from pathlib import Path
 
@@ -17,10 +17,62 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
+import style
+
 UI_FOLDER = Path(__file__).resolve().parent
 PROJECT_ROOT = service.PROJECT_ROOT
 
-RED, BLUE, GREEN, GREY, ORANGE = "#C0392B", "#2471A3", "#1E8449", "#B3B6B7", "#E69F00"
+RED, BLUE, GREEN, GREY, ORANGE = "#EF4444", "#38BDF8", "#10B981", "#A1A1AA", "#FF5C00"
+
+
+# ---------------------------------------------------------------------------
+# Theme: plots are drawn to match the page (dark theme = dark plots)
+# ---------------------------------------------------------------------------
+def is_dark():
+    """True if the app is shown in the dark theme (the default set in .streamlit/config.toml)."""
+    try:
+        return st.context.theme.type == "dark"              # newer Streamlit: the theme in use
+    except Exception:
+        try:
+            return (st.get_option("theme.base") or "light") == "dark"
+        except Exception:
+            return False
+
+
+def ink():
+    """Colour for lines and text drawn on a plot background."""
+    return "#FAFAFA" if is_dark() else "#18181B"
+
+
+def off_colour():
+    """Colour for 'empty' cells and bars."""
+    return "#27272A" if is_dark() else "#E4E4E7"
+
+
+def apply_plot_theme():
+    """Set matplotlib's defaults for the current theme. Called at the start of every run (app.py)."""
+    matplotlib.rcdefaults()
+    surface, line, text, muted = (("#18181B", "#3F3F46", "#FAFAFA", "#A1A1AA") if is_dark()
+                                  else ("#FFFFFF", "#D4D4D8", "#18181B", "#52525B"))
+    plt.rcParams.update({
+        "figure.facecolor": surface, "axes.facecolor": surface, "savefig.facecolor": surface,
+        "axes.edgecolor": line, "axes.labelcolor": text, "text.color": text,
+        "xtick.color": muted, "ytick.color": muted, "grid.color": line,
+        "axes.spines.top": False, "axes.spines.right": False,
+        "legend.facecolor": surface, "legend.edgecolor": line, "font.size": 10,
+    })
+
+
+def page_header(path_or_title, subtitle=None):
+    """
+    Animated header for a page. Pass the page file name (e.g. "views/early.py") to take icon,
+    title, summary and colours from FEATURES, or a plain title for other pages.
+    """
+    for section, path, title, icon, summary, _headline in FEATURES:
+        if path == path_or_title:
+            style.page_header(icon, title, subtitle or summary, section)
+            return
+    style.page_header("ℹ️", path_or_title, subtitle or "", "Evidence")
 
 # ---------------------------------------------------------------------------
 # Every feature of the project: menu section, page file, title, icon, one-line summary, headline
@@ -116,16 +168,20 @@ def show_figure(fig):
 
 
 def heat_figure(x, heat, title):
-    """Series drawn over a red/blue evidence strip."""
+    """Series drawn over a red/blue evidence strip (red = for the class, blue = against)."""
     heat = np.asarray(heat)
     limit = float(np.max(np.abs(heat))) or 1.0
+    if is_dark():        # blue -> dark -> red, so "no evidence" blends into the dark plot
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list("evidence", ["#38BDF8", "#1D4ED8", "#18181B", "#B91C1C", "#FF5C00"])
+    else:
+        cmap = "RdBu_r"
     fig, ax = plt.subplots(figsize=(10, 3.2))
-    ax.imshow(heat[None, :], aspect="auto", cmap="RdBu_r", vmin=-limit, vmax=limit,
-              extent=(0, len(x) - 1, float(np.min(x)) - 0.1, float(np.max(x)) + 0.1), alpha=0.85)
-    ax.plot(np.arange(len(x)), x, color="black", linewidth=1.6)
+    ax.imshow(heat[None, :], aspect="auto", cmap=cmap, vmin=-limit, vmax=limit,
+              extent=(0, len(x) - 1, float(np.min(x)) - 0.1, float(np.max(x)) + 0.1), alpha=0.9)
+    ax.plot(np.arange(len(x)), x, color=ink(), linewidth=1.8)
     ax.set_title(title)
     ax.set_xlabel("time step")
-    fig.colorbar(plt.cm.ScalarMappable(cmap="RdBu_r", norm=plt.Normalize(-limit, limit)),
+    fig.colorbar(plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(-limit, limit)),
                  ax=ax, label="evidence (red = for, blue = against)")
     fig.tight_layout()
     return fig
