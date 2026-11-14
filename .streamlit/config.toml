@@ -1,0 +1,9 @@
+# Look of the MiniRocket Explorer (ui/app.py). Streamlit reads this file from the folder the
+# app is started in, i.e. the repository root:  streamlit run ui/app.py
+# Colours are the project palette (see ui/style.py). Delete this file for Streamlit's default theme.
+[theme]
+base = "dark"
+primaryColor = "#FF5C00"
+backgroundColor = "#09090B"
+secondaryBackgroundColor = "#18181B"
+textColor = "#FAFAFA"

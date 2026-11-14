@@ -1,0 +1,211 @@
+dataset,seed,feature_set,num_features,accuracy
+GunPoint,0,raw PPV only (= original features),2436,0.9933333333333333
+GunPoint,0,raw PPV + MPV,4872,0.9933333333333333
+GunPoint,0,raw PPV + MIPV,4872,0.9933333333333333
+GunPoint,0,raw PPV + LSPV,4872,0.9933333333333333
+GunPoint,0,raw all 4 pools,9744,0.9933333333333333
+GunPoint,0,raw + diff PPV only,4872,1.0
+GunPoint,0,raw + diff all 4 pools,19488,1.0
+GunPoint,1,raw PPV only (= original features),2436,0.9933333333333333
+GunPoint,1,raw PPV + MPV,4872,0.9933333333333333
+GunPoint,1,raw PPV + MIPV,4872,0.9866666666666667
+GunPoint,1,raw PPV + LSPV,4872,1.0
+GunPoint,1,raw all 4 pools,9744,0.9933333333333333
+GunPoint,1,raw + diff PPV only,4872,1.0
+GunPoint,1,raw + diff all 4 pools,19488,1.0
+GunPoint,2,raw PPV only (= original features),2436,0.9933333333333333
+GunPoint,2,raw PPV + MPV,4872,0.9933333333333333
+GunPoint,2,raw PPV + MIPV,4872,0.9866666666666667
+GunPoint,2,raw PPV + LSPV,4872,1.0
+GunPoint,2,raw all 4 pools,9744,0.9933333333333333
+GunPoint,2,raw + diff PPV only,4872,1.0
+GunPoint,2,raw + diff all 4 pools,19488,1.0
+ECG200,0,raw PPV only (= original features),2436,0.92
+ECG200,0,raw PPV + MPV,4872,0.91
+ECG200,0,raw PPV + MIPV,4872,0.91
+ECG200,0,raw PPV + LSPV,4872,0.92
+ECG200,0,raw all 4 pools,9744,0.92
+ECG200,0,raw + diff PPV only,4872,0.92
+ECG200,0,raw + diff all 4 pools,19488,0.92
+ECG200,1,raw PPV only (= original features),2436,0.89
+ECG200,1,raw PPV + MPV,4872,0.9
+ECG200,1,raw PPV + MIPV,4872,0.89
+ECG200,1,raw PPV + LSPV,4872,0.91
+ECG200,1,raw all 4 pools,9744,0.91
+ECG200,1,raw + diff PPV only,4872,0.91
+ECG200,1,raw + diff all 4 pools,19488,0.92
+ECG200,2,raw PPV only (= original features),2436,0.91
+ECG200,2,raw PPV + MPV,4872,0.9
+ECG200,2,raw PPV + MIPV,4872,0.9
+ECG200,2,raw PPV + LSPV,4872,0.91
+ECG200,2,raw all 4 pools,9744,0.91
+ECG200,2,raw + diff PPV only,4872,0.89
+ECG200,2,raw + diff all 4 pools,19488,0.92
+Coffee,0,raw PPV only (= original features),2436,1.0
+Coffee,0,raw PPV + MPV,4872,1.0
+Coffee,0,raw PPV + MIPV,4872,1.0
+Coffee,0,raw PPV + LSPV,4872,1.0
+Coffee,0,raw all 4 pools,9744,1.0
+Coffee,0,raw + diff PPV only,4872,1.0
+Coffee,0,raw + diff all 4 pools,19488,1.0
+Coffee,1,raw PPV only (= original features),2436,1.0
+Coffee,1,raw PPV + MPV,4872,1.0
+Coffee,1,raw PPV + MIPV,4872,1.0
+Coffee,1,raw PPV + LSPV,4872,1.0
+Coffee,1,raw all 4 pools,9744,1.0
+Coffee,1,raw + diff PPV only,4872,1.0
+Coffee,1,raw + diff all 4 pools,19488,1.0
+Coffee,2,raw PPV only (= original features),2436,1.0
+Coffee,2,raw PPV + MPV,4872,1.0
+Coffee,2,raw PPV + MIPV,4872,1.0
+Coffee,2,raw PPV + LSPV,4872,1.0
+Coffee,2,raw all 4 pools,9744,1.0
+Coffee,2,raw + diff PPV only,4872,1.0
+Coffee,2,raw + diff all 4 pools,19488,1.0
+Beef,0,raw PPV only (= original features),2436,0.8333333333333334
+Beef,0,raw PPV + MPV,4872,0.8333333333333334
+Beef,0,raw PPV + MIPV,4872,0.8333333333333334
+Beef,0,raw PPV + LSPV,4872,0.8
+Beef,0,raw all 4 pools,9744,0.8333333333333334
+Beef,0,raw + diff PPV only,4872,0.7666666666666667
+Beef,0,raw + diff all 4 pools,19488,0.7666666666666667
+Beef,1,raw PPV only (= original features),2436,0.8666666666666667
+Beef,1,raw PPV + MPV,4872,0.8666666666666667
+Beef,1,raw PPV + MIPV,4872,0.8666666666666667
+Beef,1,raw PPV + LSPV,4872,0.8
+Beef,1,raw all 4 pools,9744,0.8333333333333334
+Beef,1,raw + diff PPV only,4872,0.7666666666666667
+Beef,1,raw + diff all 4 pools,19488,0.7666666666666667
+Beef,2,raw PPV only (= original features),2436,0.8333333333333334
+Beef,2,raw PPV + MPV,4872,0.8333333333333334
+Beef,2,raw PPV + MIPV,4872,0.8666666666666667
+Beef,2,raw PPV + LSPV,4872,0.8
+Beef,2,raw all 4 pools,9744,0.8333333333333334
+Beef,2,raw + diff PPV only,4872,0.7666666666666667
+Beef,2,raw + diff all 4 pools,19488,0.7666666666666667
+Wine,0,raw PPV only (= original features),2436,0.8333333333333334
+Wine,0,raw PPV + MPV,4872,0.8703703703703703
+Wine,0,raw PPV + MIPV,4872,0.7962962962962963
+Wine,0,raw PPV + LSPV,4872,0.8518518518518519
+Wine,0,raw all 4 pools,9744,0.8888888888888888
+Wine,0,raw + diff PPV only,4872,0.8333333333333334
+Wine,0,raw + diff all 4 pools,19488,0.7962962962962963
+Wine,1,raw PPV only (= original features),2436,0.8148148148148148
+Wine,1,raw PPV + MPV,4872,0.8148148148148148
+Wine,1,raw PPV + MIPV,4872,0.8518518518518519
+Wine,1,raw PPV + LSPV,4872,0.8333333333333334
+Wine,1,raw all 4 pools,9744,0.8518518518518519
+Wine,1,raw + diff PPV only,4872,0.8518518518518519
+Wine,1,raw + diff all 4 pools,19488,0.8333333333333334
+Wine,2,raw PPV only (= original features),2436,0.9074074074074074
+Wine,2,raw PPV + MPV,4872,0.9444444444444444
+Wine,2,raw PPV + MIPV,4872,0.8333333333333334
+Wine,2,raw PPV + LSPV,4872,0.8703703703703703
+Wine,2,raw all 4 pools,9744,0.9074074074074074
+Wine,2,raw + diff PPV only,4872,0.9074074074074074
+Wine,2,raw + diff all 4 pools,19488,0.8333333333333334
+Lightning7,0,raw PPV only (= original features),2436,0.8082191780821918
+Lightning7,0,raw PPV + MPV,4872,0.821917808219178
+Lightning7,0,raw PPV + MIPV,4872,0.7808219178082192
+Lightning7,0,raw PPV + LSPV,4872,0.821917808219178
+Lightning7,0,raw all 4 pools,9744,0.8356164383561644
+Lightning7,0,raw + diff PPV only,4872,0.7945205479452054
+Lightning7,0,raw + diff all 4 pools,19488,0.821917808219178
+Lightning7,1,raw PPV only (= original features),2436,0.8082191780821918
+Lightning7,1,raw PPV + MPV,4872,0.821917808219178
+Lightning7,1,raw PPV + MIPV,4872,0.7671232876712328
+Lightning7,1,raw PPV + LSPV,4872,0.7945205479452054
+Lightning7,1,raw all 4 pools,9744,0.8356164383561644
+Lightning7,1,raw + diff PPV only,4872,0.821917808219178
+Lightning7,1,raw + diff all 4 pools,19488,0.8082191780821918
+Lightning7,2,raw PPV only (= original features),2436,0.7945205479452054
+Lightning7,2,raw PPV + MPV,4872,0.8082191780821918
+Lightning7,2,raw PPV + MIPV,4872,0.7945205479452054
+Lightning7,2,raw PPV + LSPV,4872,0.8082191780821918
+Lightning7,2,raw all 4 pools,9744,0.8356164383561644
+Lightning7,2,raw + diff PPV only,4872,0.8356164383561644
+Lightning7,2,raw + diff all 4 pools,19488,0.821917808219178
+ItalyPowerDemand,0,raw PPV only (= original features),2436,0.9630709426627794
+ItalyPowerDemand,0,raw PPV + MPV,4872,0.9689018464528668
+ItalyPowerDemand,0,raw PPV + MIPV,4872,0.966958211856171
+ItalyPowerDemand,0,raw PPV + LSPV,4872,0.9611273080660836
+ItalyPowerDemand,0,raw all 4 pools,9744,0.967930029154519
+ItalyPowerDemand,0,raw + diff PPV only,4872,0.9650145772594753
+ItalyPowerDemand,0,raw + diff all 4 pools,19488,0.9689018464528668
+ItalyPowerDemand,1,raw PPV only (= original features),2436,0.966958211856171
+ItalyPowerDemand,1,raw PPV + MPV,4872,0.9689018464528668
+ItalyPowerDemand,1,raw PPV + MIPV,4872,0.967930029154519
+ItalyPowerDemand,1,raw PPV + LSPV,4872,0.9630709426627794
+ItalyPowerDemand,1,raw all 4 pools,9744,0.9708454810495627
+ItalyPowerDemand,1,raw + diff PPV only,4872,0.9640427599611273
+ItalyPowerDemand,1,raw + diff all 4 pools,19488,0.9698736637512148
+ItalyPowerDemand,2,raw PPV only (= original features),2436,0.967930029154519
+ItalyPowerDemand,2,raw PPV + MPV,4872,0.9689018464528668
+ItalyPowerDemand,2,raw PPV + MIPV,4872,0.9698736637512148
+ItalyPowerDemand,2,raw PPV + LSPV,4872,0.9630709426627794
+ItalyPowerDemand,2,raw all 4 pools,9744,0.9718172983479106
+ItalyPowerDemand,2,raw + diff PPV only,4872,0.9708454810495627
+ItalyPowerDemand,2,raw + diff all 4 pools,19488,0.9698736637512148
+ArrowHead,0,raw PPV only (= original features),2436,0.8514285714285714
+ArrowHead,0,raw PPV + MPV,4872,0.8571428571428571
+ArrowHead,0,raw PPV + MIPV,4872,0.8457142857142858
+ArrowHead,0,raw PPV + LSPV,4872,0.8514285714285714
+ArrowHead,0,raw all 4 pools,9744,0.8742857142857143
+ArrowHead,0,raw + diff PPV only,4872,0.8514285714285714
+ArrowHead,0,raw + diff all 4 pools,19488,0.8571428571428571
+ArrowHead,1,raw PPV only (= original features),2436,0.8457142857142858
+ArrowHead,1,raw PPV + MPV,4872,0.8571428571428571
+ArrowHead,1,raw PPV + MIPV,4872,0.8285714285714286
+ArrowHead,1,raw PPV + LSPV,4872,0.8514285714285714
+ArrowHead,1,raw all 4 pools,9744,0.8628571428571429
+ArrowHead,1,raw + diff PPV only,4872,0.8628571428571429
+ArrowHead,1,raw + diff all 4 pools,19488,0.8571428571428571
+ArrowHead,2,raw PPV only (= original features),2436,0.8742857142857143
+ArrowHead,2,raw PPV + MPV,4872,0.88
+ArrowHead,2,raw PPV + MIPV,4872,0.8514285714285714
+ArrowHead,2,raw PPV + LSPV,4872,0.8628571428571429
+ArrowHead,2,raw all 4 pools,9744,0.8742857142857143
+ArrowHead,2,raw + diff PPV only,4872,0.8571428571428571
+ArrowHead,2,raw + diff all 4 pools,19488,0.8571428571428571
+CBF,0,raw PPV only (= original features),2436,0.9988888888888889
+CBF,0,raw PPV + MPV,4872,0.9988888888888889
+CBF,0,raw PPV + MIPV,4872,0.9988888888888889
+CBF,0,raw PPV + LSPV,4872,0.9988888888888889
+CBF,0,raw all 4 pools,9744,0.9988888888888889
+CBF,0,raw + diff PPV only,4872,0.9955555555555555
+CBF,0,raw + diff all 4 pools,19488,0.9966666666666667
+CBF,1,raw PPV only (= original features),2436,0.9988888888888889
+CBF,1,raw PPV + MPV,4872,0.9988888888888889
+CBF,1,raw PPV + MIPV,4872,0.9988888888888889
+CBF,1,raw PPV + LSPV,4872,1.0
+CBF,1,raw all 4 pools,9744,0.9988888888888889
+CBF,1,raw + diff PPV only,4872,0.9944444444444445
+CBF,1,raw + diff all 4 pools,19488,0.9966666666666667
+CBF,2,raw PPV only (= original features),2436,0.9988888888888889
+CBF,2,raw PPV + MPV,4872,0.9988888888888889
+CBF,2,raw PPV + MIPV,4872,0.9988888888888889
+CBF,2,raw PPV + LSPV,4872,1.0
+CBF,2,raw all 4 pools,9744,0.9988888888888889
+CBF,2,raw + diff PPV only,4872,0.9955555555555555
+CBF,2,raw + diff all 4 pools,19488,0.9966666666666667
+FaceFour,0,raw PPV only (= original features),2436,0.9772727272727273
+FaceFour,0,raw PPV + MPV,4872,0.9659090909090909
+FaceFour,0,raw PPV + MIPV,4872,0.9545454545454546
+FaceFour,0,raw PPV + LSPV,4872,0.9772727272727273
+FaceFour,0,raw all 4 pools,9744,0.9545454545454546
+FaceFour,0,raw + diff PPV only,4872,0.9545454545454546
+FaceFour,0,raw + diff all 4 pools,19488,0.9204545454545454
+FaceFour,1,raw PPV only (= original features),2436,0.9545454545454546
+FaceFour,1,raw PPV + MPV,4872,0.9659090909090909
+FaceFour,1,raw PPV + MIPV,4872,0.9545454545454546
+FaceFour,1,raw PPV + LSPV,4872,0.9659090909090909
+FaceFour,1,raw all 4 pools,9744,0.9545454545454546
+FaceFour,1,raw + diff PPV only,4872,0.9431818181818182
+FaceFour,1,raw + diff all 4 pools,19488,0.9204545454545454
+FaceFour,2,raw PPV only (= original features),2436,0.9772727272727273
+FaceFour,2,raw PPV + MPV,4872,0.9659090909090909
+FaceFour,2,raw PPV + MIPV,4872,0.9545454545454546
+FaceFour,2,raw PPV + LSPV,4872,0.9772727272727273
+FaceFour,2,raw all 4 pools,9744,0.9545454545454546
+FaceFour,2,raw + diff PPV only,4872,0.9545454545454546
+FaceFour,2,raw + diff all 4 pools,19488,0.9090909090909091

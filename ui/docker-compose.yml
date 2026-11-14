@@ -1,0 +1,17 @@
+# Run the UI and the API together with one command, from the REPOSITORY ROOT:
+#     docker compose -f ui/docker-compose.yml up --build
+# UI:  http://localhost:8501      API docs: http://localhost:8000/docs
+services:
+  ui:
+    build:
+      context: ..                          # repository root
+      dockerfile: ui/Dockerfile
+    image: minirocket-explorer
+    ports:
+      - "8501:8501"
+  api:
+    image: minirocket-explorer
+    depends_on: [ui]                       # reuses the image built for "ui"
+    command: ["uvicorn", "api:app", "--app-dir", "ui", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"

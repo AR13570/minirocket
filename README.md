@@ -36,16 +36,27 @@ univariate data:
 | **Group pruning** | Selects whole kernel/dilation groups using TRAIN data, then skips the convolution and pooling work for removed groups. Retained features stay exact, but using fewer groups can change accuracy. | [Group pruning](./README_GROUP_PRUNING.md#6-module-1-group-pruning) |
 | **Bias strategies** | Compares the original threshold fitting with uniform and class-stratified sampling of training examples. This tests whether balancing the classes used to fit thresholds improves accuracy or stability. | [Class-stratified biases](./README_GROUP_PRUNING.md#8-module-3-class-stratified-biases) |
 | **Controls** | Compares pruning with random group selection and smaller fresh models to establish where the speed and accuracy differences come from. | [Control experiments](./README_GROUP_PRUNING.md#7-module-2-controls) |
+| **Adaptive multi-pooling** | Computes a second pooling statistic (MPV, the mean of values above the threshold) in the same pass as PPV and adds it only when 5-fold cross-validation on TRAIN prefers it; ties keep the original features. | [Adaptive multi-pooling](./README_ADAPTIVE_EXPLAIN_EARLY.md#6-module-1-adaptive-multi-pooling) |
+| **Explanations** | Splits the linear classifier's score exactly over the time steps of a series (heat maps), and reports which dilations and kernels carry the weight. | [Explainability](./README_ADAPTIVE_EXPLAIN_EARLY.md#7-module-2-explainability) |
+| **Early classification** | Trains one model per prefix length and answers as soon as a confidence threshold learned on TRAIN is reached, before the series ends. | [Early classification](./README_ADAPTIVE_EXPLAIN_EARLY.md#8-module-3-early-classification) |
+| **MiniRocket Explorer** | A Streamlit app with one page per part above (plus the reproduction results), a REST API and Docker packaging. | [App and API guide](./ui/README.md) |
 
 Joint PPV reduces the cost of pooling within each group; pruning reduces the
 number of groups computed. They can be used together, with the classifier
 retrained on the retained features. Bias strategies change how thresholds are
 fitted and can be evaluated with either pooling implementation and with pruning.
+Adaptive multi-pooling changes the features only where the training data supports
+it and otherwise predicts with joint PPV. Explanations and early classification
+are additional outputs of the same pipeline and do not change its predictions at
+full length.
 
 Start with the [results](#results) and [combined benchmark commands](#run-the-combined-benchmark)
 below. The [joint PPV guide](./benchmarks/README.md) covers its benchmark protocol,
 setup and outputs; the [group pruning and bias guide](./README_GROUP_PRUNING.md)
-covers algorithms, Python usage, controls and detailed experiments. The original
+covers algorithms, Python usage, controls and detailed experiments; the
+[adaptive pooling, explanation and early classification guide](./README_ADAPTIVE_EXPLAIN_EARLY.md)
+covers those modules, and [their commands](#run-the-adaptive-explanation-and-early-classification-experiments)
+and [the app](#run-the-app) are below. The original
 multivariate and variable-length implementations are listed under [Code](#code).
 
 ## Podcast
@@ -128,6 +139,44 @@ consistent benefit from class-stratified thresholds over uniform sampling.
 The Mac and Windows studies use different hardware and timing protocols, so their
 speed reductions should not be compared directly. See the
 [group pruning and bias guide](./README_GROUP_PRUNING.md) for details.
+
+### Adaptive pooling, explanations and early classification (Mac)
+
+Measured on **macOS, Apple ARM64**, Python 3.14, Numba 0.63.1, with **10 Numba
+threads** (not the one-thread protocol of the studies above, so times are not
+comparable with them). Accuracy is the mean over datasets of the three-seed mean
+on the supplied TRAIN/TEST split, at 9,996 base features.
+
+| Datasets | Original MiniRocket | Adaptive multi-pooling | Better / equal / worse | Seconds per dataset (original / adaptive) |
+|---|---:|---:|---:|---:|
+| 10 used during development | 92.55% | 92.62% | 2 / 7 / 1 | 0.029 / 0.082 |
+| 20 not used during development | 89.73% | 89.97% | 5 / 14 / 1 | 0.052 / 0.188 |
+
+The gain on the 20 unseen datasets is not significant (Wilcoxon p = 0.075) and
+comes mostly from one dataset (Herring, +3.65 points); the other 19 gain 0.06
+points on average. The development figures are optimistic, because the design
+was chosen while looking at them. MPV was selected in 11 of the 60 unseen
+dataset-seed fits; most of the extra time is the 5-fold choice during training.
+
+Early classification on five datasets (seed 0):
+
+| Dataset | Full-length accuracy | Early accuracy | Share of each series read |
+|---|---:|---:|---:|
+| GunPoint | 99.33% | 99.33% | 30.1% |
+| ECG200 | 91.00% | 89.00% | 18.1% |
+| ItalyPowerDemand | 96.31% | 91.55% | 51.7% |
+| Trace | 100.00% | 96.00% | 53.5% |
+| SyntheticControl | 98.67% | 93.33% | 29.5% |
+| **Mean** | 97.06% | 93.84% | 36.6% |
+
+Explanations add up exactly to the classifier's score (checked by the tests); on
+GunPoint the evidence sits at 12–22% of the series. Faithfulness of the heat maps
+(for example by deletion tests) was not evaluated.
+
+* Adaptive pooling: [development](./results/adaptive_pooling_dev10/summary.csv), [ablation](./results/adaptive_pooling_ablation_dev10/ablation_summary.csv), [unseen datasets](./results/adaptive_pooling_unseen20/summary.csv)
+* [Early classification](./results/early_classification_5ds/summary.csv)
+* [GunPoint explanation report](./results/explain_GunPoint/report.md)
+* [Guide: methods, options and tests](./README_ADAPTIVE_EXPLAIN_EARLY.md)
 
 ### Run the combined benchmark
 
@@ -229,6 +278,64 @@ measure worker peak memory. To reproduce that table, follow the
 [recorded settings and environment](./results/joint_ppv_2026-10-26/metadata.json).
 Timings depend on hardware and software.
 
+### Run the adaptive, explanation and early-classification experiments
+
+Follow the [setup and dataset download instructions](./benchmarks/README.md#setup-and-dataset-download),
+add matplotlib for the plots, and run from the repository root:
+
+```bash
+.venv/bin/python -m pip install matplotlib
+
+# Adaptive multi-pooling: original vs joint PPV vs adaptive (10 development datasets, seeds 0 1 2)
+.venv/bin/python -B -m experiments.multipool \
+  --data ./data/Univariate_ts/ \
+  --output-dir ./results/adaptive-run/ \
+  --datasets GunPoint ECG200 Coffee Beef Wine Lightning7 ItalyPowerDemand ArrowHead CBF FaceFour
+
+# Early classification (five datasets, seed 0)
+.venv/bin/python -B -m experiments.early_classification \
+  --data ./data/Univariate_ts/ \
+  --output-dir ./results/early-run/ \
+  --datasets GunPoint ECG200 ItalyPowerDemand Trace SyntheticControl
+
+# Explanation report and heat maps for one dataset
+.venv/bin/python -B -m experiments.explain_demo \
+  --data ./data/Univariate_ts/ \
+  --output-dir ./results/explain-run/ \
+  --dataset GunPoint
+```
+
+Omit `--datasets` from the first command to use every compatible dataset in the
+archive; add `--methods all --ablation` for the earlier variants and the
+one-statistic-at-a-time ablation. Without `--data` the named datasets are
+downloaded through aeon. Each script accepts `--help`; all options are listed in
+the [guide](./README_ADAPTIVE_EXPLAIN_EARLY.md#10-all-options-command-line-and-python).
+
+### Run the tests
+
+```bash
+.venv/bin/python -B -m unittest discover -s tests                 # library and benchmark tests
+.venv/bin/python -B -m unittest discover -s ui -p "test_*.py"     # app logic (needs ui/requirements.txt)
+```
+
+### Run the app
+
+MiniRocket Explorer shows every part of this repository on one dataset: joint
+PPV timing, group pruning, bias strategies, adaptive pooling, explanations, early
+classification and the reproduction results.
+
+```bash
+.venv/bin/python -m pip install -r ui/requirements.txt
+.venv/bin/streamlit run ui/app.py          # opens http://localhost:8501
+```
+
+The first visit to a dataset trains and saves its models (about 10–60 s); run
+`.venv/bin/python ui/train_and_save.py` beforehand to avoid the wait. Datasets
+are downloaded through aeon on first use (GunPoint, ItalyPowerDemand and
+ArrowHead are bundled with aeon). The REST API
+(`.venv/bin/uvicorn api:app --app-dir ui --port 8000`) and Docker commands are in
+the [app and API guide](./ui/README.md).
+
 ## Requirements\*
 
 * Python, NumPy, pandas
@@ -236,9 +343,36 @@ Timings depend on hardware and software.
 * scikit-learn or similar
 * PyTorch or similar (for larger datasets)
 
-\* *PyTorch is needed only for the softmax example. The archive benchmark also uses SciPy, aeon and threadpoolctl; see the [benchmark setup](./benchmarks/README.md#setup-and-dataset-download) and [recorded environment](./results/joint_ppv_2026-10-26/metadata.json).*
+\* *PyTorch is needed only for the softmax example. The archive benchmark also uses SciPy, aeon and threadpoolctl; see the [benchmark setup](./benchmarks/README.md#setup-and-dataset-download) and [recorded environment](./results/joint_ppv_2026-10-26/metadata.json). The explanation and early-classification plots use matplotlib, and the app's packages are listed in [`ui/requirements.txt`](./ui/requirements.txt).*
 
 ## Code
+
+### [`minirocket_adaptive.py`](./code/minirocket_adaptive.py)
+
+Adaptive multi-pooling model. Five-fold stratified cross-validation on TRAIN
+chooses between the original PPV features and PPV plus MPV; ties keep PPV. When
+PPV is chosen, prediction uses the joint PPV transform and gives the original
+MiniRocket predictions.
+
+### [`minirocket_multipool.py`](./code/minirocket_multipool.py)
+
+Pooling transform behind the adaptive model. Computes PPV, MPV, mean index of
+positive values and longest positive run in one pass over each convolution
+output, with a lighter PPV+MPV path. Its PPV block equals the joint PPV output
+exactly.
+
+### [`minirocket_explain.py`](./code/minirocket_explain.py)
+
+Explanations for the adaptive model: a per-time-step heat map that sums to the
+classifier's score minus its intercept, importance by dilation and kernel, and
+per-class summaries.
+
+### [`minirocket_early.py`](./code/minirocket_early.py)
+
+Early classification with one MiniRocket model per prefix length and confidence
+thresholds learned from out-of-fold predictions on TRAIN. See the
+[guide](./README_ADAPTIVE_EXPLAIN_EARLY.md) for Python examples and results, and
+[`ui/`](./ui/README.md) for the app and REST API built on these modules.
 
 ### [`minirocket_pruned.py`](./code/minirocket_pruned.py)
 

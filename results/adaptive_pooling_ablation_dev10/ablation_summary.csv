@@ -1,0 +1,8 @@
+feature_set,num_features,mean_accuracy
+raw PPV only (= original features),2436,0.9191664374619363
+raw PPV + MPV,4872,0.9233467650173921
+raw PPV + MIPV,4872,0.9116019929672896
+raw PPV + LSPV,4872,0.9161957778861608
+raw all 4 pools,9744,0.9252440624500077
+raw + diff PPV only,4872,0.9124602353213386
+raw + diff all 4 pools,19488,0.9065031834289126
