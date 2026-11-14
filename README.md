@@ -152,9 +152,18 @@ and writes each to its own folder. Analysis follows each successful run.
 
 The commands use the extension guide's recommended `filter` scorer. Iterative
 ridge scoring is substantially more expensive; use `--scorers ridge filter`
-to compare both scoring methods. A full sweep can take many hours.
+to compare both scoring methods.
+
+> **This is the full run: allow many hours, potentially overnight.** As a
+> reference, the 2,500-feature, one-seed filter run across all 113 datasets and
+> three bias strategies took about 48 minutes on our Mac. The full three-budget,
+> three-seed sweep has not been timed; runtime depends on hardware and settings.
+> For faster execution, change the loop to `for features in 2500; do`, add
+> `--seeds 0`, or use the [smaller-run example](#optional-change-experiment-settings)
+> below to select fewer datasets.
 
 ```bash
+# Full run: all datasets, three feature budgets and three seeds; allow many hours.
 # Limit native threads for comparable timings.
 export NUMBA_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 BLIS_NUM_THREADS=1
