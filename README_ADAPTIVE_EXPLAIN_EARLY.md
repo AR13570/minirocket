@@ -63,12 +63,13 @@ web app, **without changing any existing file**: the modules sit in `code/`, `ex
 
 ## 2. Quick start
 
-Run these from the **repository root**, with `code/` on the path (the same convention as the
-other experiments, see [README_GROUP_PRUNING.md](./README_GROUP_PRUNING.md)):
+Run these from the **repository root**, in the environment described in
+[benchmarks/README.md](./benchmarks/README.md#setup-and-dataset-download) (with that guide's
+virtual environment, write `.venv/bin/python` instead of `python`). `code/` is put on the import
+path automatically; on Windows also add `compat_windows` to `PYTHONPATH`
+(see [README_GROUP_PRUNING.md](./README_GROUP_PRUNING.md)).
 
 ```bash
-export PYTHONPATH="$PWD/code"            # Windows: see README_GROUP_PRUNING.md (compat_windows)
-
 # 1. check everything works (all repository tests; the first run compiles code, so allow a minute)
 python -B -m unittest discover -s tests
 
@@ -146,8 +147,8 @@ python -c "import numpy, numba, sklearn, scipy, matplotlib, aeon; print('all goo
 
 ### 4.4 Important: where to run commands from
 
-Always run commands from the **repository root** with `PYTHONPATH` set to `code/` (section 2).
-The experiments are modules (`python -B -m experiments.<name>`), like the group-pruning ones.
+Always run commands from the **repository root**. The experiments are modules
+(`python -B -m experiments.<name>`), like the group-pruning ones, and find `code/` by themselves.
 
 ---
 
@@ -622,7 +623,6 @@ full-length (HM 0.747). GunPoint: **99.33% using 30%** (no loss at all).
 ## 13. Tests
 
 ```bash
-export PYTHONPATH="$PWD/code"
 python -B -m unittest tests.test_multipool tests.test_adaptive tests.test_explain tests.test_early -v
 python -B -m unittest discover -s tests                         # together with every other test
 python -B -m unittest discover -s ui -p "test_*.py"             # the app's logic (12 tests)
@@ -668,7 +668,7 @@ group pruning    code/minirocket_pruned.py, minirocket_stratified  ───► 
 |---|---|
 | `No module named 'aeon'` | `pip install aeon` (in the same environment you run Python from) |
 | `No module named 'numba'` (or sklearn …) | wrong environment: activate the one you installed the packages into |
-| `No module named 'benchmarks'` / `minirocket_baseline` | run from the repository root with `export PYTHONPATH="$PWD/code"` |
+| `No module named 'benchmarks'` / `minirocket_baseline` | run from the repository root (not from inside `code/` or `experiments/`) |
 | First run is slow | numba compiles the code once; later runs use the cache |
 | `OMP: Info #276 ... deprecated` | harmless message from a library; ignore it |
 | A dataset is "skipped" | it is multivariate, has different lengths or missing values (not supported) |

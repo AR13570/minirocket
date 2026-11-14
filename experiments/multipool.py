@@ -3,8 +3,8 @@ Multi-pooling experiment: original MiniRocket vs the joint-PPV transform vs adap
 
 Author : Shreyas Shinde (Student ID 26104692)
 
-Run from the repository root with code/ on the path (same as the other experiments):
-  export PYTHONPATH="$PWD/code"            # Windows: see README_GROUP_PRUNING.md (compat_windows)
+Run from the repository root (same as the other experiments; on Windows add compat_windows
+to PYTHONPATH, see README_GROUP_PRUNING.md):
 
   # local UCR archive (benchmarks/README.md), chosen datasets
   python -B -m experiments.multipool --data ./data/Univariate_ts/ --datasets GunPoint ECG200 Coffee
@@ -34,9 +34,11 @@ from pathlib import Path
 
 import numpy as np
 
+# benchmarks.common first: it puts code/ on the import path (so PYTHONPATH is not needed)
+from benchmarks.common import _dataset_sources, load_benchmark_dataset, make_classifier
+
 import minirocket_joint_ppv_simd as joint                      # fast PPV transform (bit-identical)
 import minirocket_multipool as mp
-from benchmarks.common import _dataset_sources, load_benchmark_dataset, make_classifier
 from minirocket_adaptive import AdaptivePoolingMiniRocket
 from minirocket_baseline import fit_univariate, transform_univariate   # seeded fit + ORIGINAL transform
 

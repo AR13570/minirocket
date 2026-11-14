@@ -3,8 +3,7 @@ Early classification experiment: how early can MiniRocket decide, and how accura
 
 Author : Shreyas Shinde (Student ID 26104692)
 
-Run from the repository root with code/ on the path:
-    export PYTHONPATH="$PWD/code"
+Run from the repository root:
     python -B -m experiments.early_classification --data ./data/Univariate_ts/ --datasets GunPoint ECG200 ItalyPowerDemand Trace SyntheticControl
     python -B -m experiments.early_classification --datasets GunPoint --seeds 0 1 2     # aeon download, no --data
     python -B -m experiments.early_classification --datasets GunPoint --target-accuracy 0.9

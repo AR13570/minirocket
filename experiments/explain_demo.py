@@ -3,8 +3,7 @@ Explanation demo: train the final (adaptive) model on one dataset and explain it
 
 Author : Shreyas Shinde (Student ID 26104692)
 
-Run from the repository root with code/ on the path:
-    export PYTHONPATH="$PWD/code"
+Run from the repository root:
     python -B -m experiments.explain_demo                                   # GunPoint (ships with aeon)
     python -B -m experiments.explain_demo --dataset ECG200 --data ./data/Univariate_ts/
     python -B -m experiments.explain_demo --dataset Lightning7 --examples 4
