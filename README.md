@@ -75,6 +75,18 @@ MINIROCKET (including a basic multivariate implementation) is also available thr
 
 ## Results
 
+### Original paper baseline vs. our reproduced baseline
+
+| Metric | Original paper baseline | Our reproduced baseline |
+|---|---|---|
+| Datasets compared | 109 | Same 109 |
+| Actual features | 9,996 | 9,996 |
+| Evaluation | Original split, resample 0 | Same split, averaged over seeds 0-2 on Mac |
+| Mean accuracy | 85.67% | **85.69%** |
+
+Our baseline reproduces the original MiniRocket accuracy within **0.014
+percentage points**. See the [per-dataset comparison](./results/reference/paper_vs_ours.csv).
+
 ### Joint PPV (Mac)
 
 Measured on **macOS, Apple ARM64, 16 GB RAM**, with one Numba thread.
