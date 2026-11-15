@@ -177,6 +177,7 @@ Only the files marked `<-` are added by this part; no existing file is changed.
 │   ├── test_early.py                     <- 5 tests
 │   └── test_joint_ppv.py, test_pruned.py, ...
 ├── results/
+│   ├── adaptive_pooling_trial3/          <- Module 1: first trial of the 4-pool versions, 3 datasets
 │   ├── adaptive_pooling_dev10/           <- Module 1: 10 development datasets, final model
 │   ├── adaptive_pooling_ablation_dev10/  <- Module 1: pooling ablation + earlier variants
 │   ├── adaptive_pooling_unseen20/        <- Module 1: 20 datasets never used during development
@@ -578,6 +579,12 @@ Committed runs (Mac, Apple ARM64, numba 0.63.1, 3 seeds): `results/adaptive_pool
 | All 30 | | | **7 / 21 / 2** (losses −0.76, −0.15) |
 
 Largest gains: Herring +3.65, Lightning7 +0.91, ArrowHead +0.57, SyntheticControl +0.44.
+
+**First trial (`results/adaptive_pooling_trial3/`).** Before the adaptive model, the 4-pool
+versions were tried on 3 datasets (GunPoint, ItalyPowerDemand, ArrowHead; seeds 0, 1, 2): all four
+statistics scored 94.47% against 93.86% for the original. On 10 datasets the same version scored
+92.52% against 92.55% (`results/adaptive_pooling_ablation_dev10/`), so the early gain did not hold
+up; this is why the final model chooses per dataset.
 
 **Fair claim:** a consistent small improvement that is almost never worse than MiniRocket
 (close to, but not below, the 0.05 significance level).

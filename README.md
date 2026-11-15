@@ -185,7 +185,7 @@ Explanations add up exactly to the classifier's score (checked by the tests); on
 GunPoint the evidence sits at 12–22% of the series. Faithfulness of the heat maps
 (for example by deletion tests) was not evaluated.
 
-* Adaptive pooling: [development](./results/adaptive_pooling_dev10/summary.csv), [ablation](./results/adaptive_pooling_ablation_dev10/ablation_summary.csv), [unseen datasets](./results/adaptive_pooling_unseen20/summary.csv)
+* Adaptive pooling: [first 3-dataset trial](./results/adaptive_pooling_trial3/summary.csv), [development](./results/adaptive_pooling_dev10/summary.csv), [ablation](./results/adaptive_pooling_ablation_dev10/ablation_summary.csv), [unseen datasets](./results/adaptive_pooling_unseen20/summary.csv)
 * [Early classification](./results/early_classification_5ds/summary.csv)
 * [GunPoint explanation report](./results/explain_GunPoint/report.md)
 * [Guide: methods, options and tests](./README_ADAPTIVE_EXPLAIN_EARLY.md)
